@@ -21,7 +21,14 @@ txtHid ="$('#txtHospitalNumber')"
 
 #截图地址
 screen = Config.screens_file_path
-
+#Bchao 截图地址
+bscreen = Config.screens_file_path+'/Bchao/'
+#影像B截图地址
+imgBscreen = Config.screens_file_path+'/ImgB/'
+#细胞病理学截图地址
+cytoscreen = Config.screens_file_path+'/Cytology/'
+#常规病理截图地址
+pathoscreen = Config.screens_file_path+'/pathology/'
 
 def goto_Report():
 
@@ -72,26 +79,28 @@ def is_element_visible(element):
 
 
 #截图
-def screen():
+def screenAsTime():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
     driver.get_screenshot_as_file(r'../PageScreen/%s.jpg' % nowTime)
 
 
 def undo():
-    driver.find_element_by_id('btnRes')
+    driver.find_element_by_id('btnRes').click()
     sleep(1)
-    alert = EC.alert_is_present()(driver)
-    if alert:
-        alert.accept()
+    alert_close()
 
 def surgery_pathology(Hid):
     """遍历某病历号下的常规病理，并显示所见和诊断的内容，校验后的所见诊断的内容"""
+    WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('selShouShuList').is_displayed())
     surgeryList = driver.find_element_by_id('selShouShuList')
     options = surgeryList.find_elements_by_tag_name('option')
     if len(options)==0:
         print "手术次数未获取到"
         return "error"
     for i in range(len(options)):   #遍历手术次数
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('selShouShuList').is_displayed())
         surgeryList.click()
         surgeryList.find_elements_by_tag_name('option')[i].click()
         sleep(2)
@@ -140,6 +149,63 @@ def surgery_pathology(Hid):
                 WebDriverWait(driver, 10).until(
                     lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
 
+
+def followup_click():
+    driver.find_element_by_xpath('//div[@id="divOperationList"]/table/tbody/tr[4]').click()
+
+def yearSelect(value):
+    year = Select(driver.find_element_by_name('selNianQi'))
+    year.select_by_value(value)
+    WebDriverWait(driver, 10).until(
+        lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    alert = EC.alert_is_present()(driver)
+    if alert:
+        alert.accept()
+
+def jiaoyan_Bchao(Hid):
+    try:
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    except Exception as e:
+        print e
+    alert_close()
+    tbodyReportList = driver.find_element_by_id('tbodyReportList')
+    reportList = tbodyReportList.find_elements_by_tag_name('tr')
+    for j in range(len(reportList)):  # 遍历术前B超报告份数
+        reportList[j].click()
+        sleep(1)
+        # 判断是否有alert
+        alert = EC.alert_is_present()(driver)
+        if alert:
+            if (u'外院手术' in alert.text):
+                alert.dismiss()
+            else:
+                alert.accept()
+        undo()
+        alert_close()
+        WebDriverWait(driver, 20).until_not(
+            lambda the_driver: the_driver.find_element_by_xpath('//div[@class="divBlockHid"]').is_displayed())
+        undo()
+        alert_close()
+        checkResult = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
+        # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
+        suoj_Fo = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').text  # 腺内灶所见
+        zhend_Fo = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺内灶诊断
+        suoj_Ln = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').text  # 淋巴结所见
+        zhend_Ln = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 淋巴结诊断
+        n = operateExcel.max_row('Bchao') + 1
+        operateExcel.WriteExcel(Hid, 'A' + str(n), 'Bchao')
+        operateExcel.WriteExcel(checkResult, 'B' + str(n), 'Bchao')
+        operateExcel.WriteExcel(checkConclusion, 'C' + str(n), 'Bchao')
+        operateExcel.WriteExcel(suoj_Fo, 'D' + str(n), 'Bchao')
+        operateExcel.WriteExcel(zhend_Fo, 'E' + str(n), 'Bchao')
+        operateExcel.WriteExcel(suoj_Ln, 'F' + str(n), 'Bchao')
+        operateExcel.WriteExcel(zhend_Ln, 'G' + str(n), 'Bchao')
+        n = n + 1
 
 
 

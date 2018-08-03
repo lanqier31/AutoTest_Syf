@@ -12,8 +12,9 @@ autocase = Config.autocase_path
 def WriteExcel(result, locator,sheetname):
     book = load_workbook(autocase)
     sheet = book.get_sheet_by_name(sheetname)
+    if not sheet:
+        book.create_sheet(sheetname, index=1)
     sheet.cell(locator).value = result
-
     book.save(autocase)
 
 

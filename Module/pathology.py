@@ -52,6 +52,7 @@ for Hid in HospitalNums:   #遍历要测试的病历号
         print Hid+"手术次数未获取到"
         continue
     for i in range(num_operations):  # 遍历手术次数
+
         surgeryList.click()
         # 判断是否有alert并关闭
         SyfClinicalReport.alert_close()
