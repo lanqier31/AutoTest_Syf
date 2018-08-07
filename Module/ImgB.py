@@ -34,11 +34,10 @@ for Hid in HospitalNums:   #遍历要测试的病历号
     # ReportList.del_checkCode(Hid)        #删除该病历号下的校验代码化内容
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
+    SyfClinicalReport.selectImgB()
     SyfClinicalReport.yearSelect('2')
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
-
-    # SyfClinicalReport.jiaoyan_Bchao(Hid)
+    SyfClinicalReport.jiaoyan_ImgB(Hid)
     SyfClinicalReport.yearSelect('5')
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
+    SyfClinicalReport.jiaoyan_ImgB(Hid)
     SyfClinicalReport.yearSelect('10')
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
+    SyfClinicalReport.jiaoyan_ImgB(Hid)

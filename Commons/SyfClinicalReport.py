@@ -58,7 +58,7 @@ def alert_close():
     if alert:
         if (u'外院手术' in alert.text):
             alert.dismiss()
-        elif (u'没有此病人信息'):
+        elif (u'没有此病人信息'in alert.text):
             alert.accept()
             print "不存在该病历号"
         else:
@@ -84,10 +84,22 @@ def screenAsTime():
     driver.get_screenshot_as_file(r'../PageScreen/%s.jpg' % nowTime)
 
 
+def screenPatho(Hid):
+    driver.get_screenshot_as_file(pathoscreen + Hid + '.png')
+
 def undo():
     driver.find_element_by_id('btnRes').click()
     sleep(1)
     alert_close()
+    sleep(1)
+
+
+def selectImgB():
+    driver.find_element_by_id('txtCheckReportType').click()
+    driver.find_element_by_css_selector("div[data-text='影像B']").click()  # 选择病理形态学的报告类别
+    WebDriverWait(driver, 10).until(
+        lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    sleep(1)
 
 def surgery_pathology(Hid):
     """遍历某病历号下的常规病理，并显示所见和诊断的内容，校验后的所见诊断的内容"""
@@ -209,3 +221,54 @@ def jiaoyan_Bchao(Hid):
 
 
 
+def jiaoyan_ImgB(Hid):
+    """影像B校验代码化"""
+    try:
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    except Exception as e:
+        print e
+    alert_close()
+    tbodyReportList = driver.find_element_by_id('tbodyReportList')
+    reportList = tbodyReportList.find_elements_by_tag_name('tr')
+    print len(reportList)
+    if(len(reportList)== 1):
+        if (reportList[0].text=='没有报告信息.'):
+            return Hid + u'无影像学B报告'
+    for j in range(len(reportList)):  # 遍历影像B报告份数
+        reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        reportList[j].click()
+        sleep(1)
+        # 判断是否有alert
+        alert = EC.alert_is_present()(driver)
+        if alert:
+            if (u'外院手术' in alert.text):
+                alert.dismiss()
+            else:
+                alert.accept()
+        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        while('StateNoCom'!= className and 'StateCFCom'!= className):
+            undo()
+            alert_close()
+            reportList = tbodyReportList.find_elements_by_tag_name('tr')
+            reportList[j].click()  #焦点重新回到该报告上
+        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
+        WebDriverWait(driver, 20).until(
+            lambda the_driver: the_driver.find_element_by_id('btnCode').is_displayed())
+        driver.find_element_by_id('btnCode').click()  # 点击代码化
+        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').text
+        n = operateExcel.max_row('ImgB') + 1
+        operateExcel.WriteExcel(Hid, ('A' + str(n)), 'ImgB')
+        operateExcel.WriteExcel(checkResult, 'B' + str(n), 'ImgB')
+        operateExcel.WriteExcel(checkConclusion, 'C' + str(n), 'ImgB')
+        operateExcel.WriteExcel(AbnormalClassify, 'D' + str(n), 'ImgB')
+        # operateExcel.WriteExcel(zhend_Fo, 'E' + str(n), 'ImgB')
+        # operateExcel.WriteExcel(suoj_Ln, 'F' + str(n), 'ImgB')
+        # operateExcel.WriteExcel(zhend_Ln, 'G' + str(n), 'ImgB')
+
+        driver.get_screenshot_as_file(imgBscreen+Hid+'.png')
+        # driver.find_element_by_id('btnQuery').click()
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
