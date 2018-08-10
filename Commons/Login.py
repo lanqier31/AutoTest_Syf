@@ -8,7 +8,6 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoAlertPresentException
 import Config
 import sqlite3
-import pyodbc
 import time
 from openpyxl.reader.excel import load_workbook
 import sys
