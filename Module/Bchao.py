@@ -36,8 +36,6 @@ for Hid in HospitalNums:   #遍历要测试的病历号
     SyfClinicalReport.input_Hid(Hid)
     SyfClinicalReport.yearSelect('2')
     SyfClinicalReport.jiaoyan_Bchao(Hid)
-
-    # SyfClinicalReport.jiaoyan_Bchao(Hid)
     SyfClinicalReport.yearSelect('5')
     SyfClinicalReport.jiaoyan_Bchao(Hid)
     SyfClinicalReport.yearSelect('10')

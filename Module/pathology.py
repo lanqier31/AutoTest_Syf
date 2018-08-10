@@ -17,10 +17,9 @@ import sys
 import os
 import openpyxl
 from openpyxl.reader.excel import load_workbook
-import HTMLTestRunner
 
 import Config
-from Commons import Login, SyfClinicalReport,ReportList,operateExcel
+from Commons import Login, SyfClinicalReport,ReportList,operateExcel,globals
 
 
 #we use global varialbe driver
@@ -41,22 +40,20 @@ for Hid in HospitalNums:   #遍历要测试的病历号
     # ReportList.del_checkCode(Hid)        #删除该病历号下的校验代码化内容
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
-    # 判断病历号是否存在
     is_disappeared = WebDriverWait(driver, 20, 1).until_not(
         lambda x: x.find_element_by_xpath('//div[@class="divBlockHid"]').is_displayed())
     if is_disappeared:
-        log (Hid+' '+"手术信息加载超时")
+        globals.log(Hid+' '+"手术信息加载超时")
         continue
 
     surgeryList = driver.find_element_by_id('selShouShuList')
     num_operations= SyfClinicalReport.num_surgery()
     if num_operations == 0:
-        log(num_operations)
-        log(Hid+"手术次数未获取到")
+        globals.log(num_operations)
+        globals.log(Hid+"手术次数未获取到")
         continue
     for i in range(num_operations):  # 遍历手术次数
-        WebDriverWait(driver, 20).until_not(
-            lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        SyfClinicalReport.wait_loading()
         surgeryList.click()
         # 判断是否有alert并关闭
         SyfClinicalReport.alert_close()
@@ -64,8 +61,7 @@ for Hid in HospitalNums:   #遍历要测试的病历号
         sleep(2)
         #判断是否有alert并关闭
         SyfClinicalReport.alert_close()
-        WebDriverWait(driver, 20).until_not(
-            lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        SyfClinicalReport.wait_loading()
         driver.find_element_by_id('txtCheckReportType').click()
         driver.find_element_by_css_selector("div[data-text='病理形态学']").click()  # 选择病理形态学的报告类别
         sleep(3)
@@ -74,7 +70,7 @@ for Hid in HospitalNums:   #遍历要测试的病历号
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
         if (len(reportList) == 1):
             if (reportList[0].text == '没有报告信息.'):
-                log(Hid + u'无报告内容')
+                globals.log(Hid + u'无报告内容')
         for j in range(len(reportList)):    #遍历报告份数
             reportList = tbodyReportList.find_elements_by_tag_name('tr')
             reportTitle = reportList[j].find_elements_by_tag_name('td')[0].get_attribute('title')
@@ -86,26 +82,21 @@ for Hid in HospitalNums:   #遍历要测试的病历号
                 if alert:
                     alert.accept()
                     continue
-                WebDriverWait(driver, 20).until_not(
-                    lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+                    SyfClinicalReport.wait_loading()
                 className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
                 while ('StateNoCom' != className and 'StateCFCom' != className):
-                    WebDriverWait(driver, 20).until_not(
-                        lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+                    SyfClinicalReport.wait_loading()
                     SyfClinicalReport.undo()
                     sleep(2)
                     SyfClinicalReport.alert_close()
                     reportList = tbodyReportList.find_elements_by_tag_name('tr')
-                    WebDriverWait(driver, 20).until_not(
-                        lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+                    SyfClinicalReport.wait_loading()
                     reportList[j].click()  # 焦点重新回到该报告上
                     className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
                 checkResult = driver.find_element_by_xpath('//div[ @ id = "divPathology"]/div[1]/div[5]/div[2]').text
                 checkConclusion = driver.find_element_by_xpath(
                     '//div[ @ id = "divPathology"]/div[1]/div[6]/div[2]').text
-                WebDriverWait(driver, 20).until_not(
-                    lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
-
+                SyfClinicalReport.wait_loading()
                 driver.find_element_by_id('btnTest').click()  # 点击校验按钮
                 suoj_Fo = driver.find_element_by_xpath('//div[@id="divPathology"]/div[3]/div[5]/div[2]').text  # 腺内灶所见
                 zhend_Fo = driver.find_element_by_xpath('//div[@id="divPathology"]/div[3]/div[6]/div[2]').text  # 腺内灶诊断
@@ -120,7 +111,7 @@ for Hid in HospitalNums:   #遍历要测试的病历号
                 sheet['G'+str(n)] = suoj_Ln
                 sheet['I'+str(n)] = zhend_Ln
 
-                SyfClinicalReport.screenAsTime()
+                SyfClinicalReport.screenpatho()
                 driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-xnz"]').click()
                 driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-ln"]').click()
                 sleep(1)
@@ -130,14 +121,14 @@ for Hid in HospitalNums:   #遍历要测试的病历号
                 sheet['F'+str(n)] = sort_Fo
                 sheet['H'+str(n)] = sort_Ln
                 n = n + 1
-                SyfClinicalReport.screenAsTime()
+                SyfClinicalReport.screenpatho()
                 driver.find_element_by_id('btnCode').click()
                 sleep(2)
                 alert = EC.alert_is_present()(driver)
                 if alert:
-                        log(Hid+alert.text)
+                        globals.log(Hid+alert.text)
                         alert.dismiss()
-                SyfClinicalReport.screenAsTime()
+                SyfClinicalReport.screenpatho()
                 book.save(autocase)
                 driver.find_element_by_id('btnQuery').click()
                 WebDriverWait(driver, 20).until(
