@@ -5,7 +5,6 @@ from openpyxl.reader.excel import load_workbook
 
 autocase = Config.autocase_path
 def queryreport():
-    sa=[]
     book = load_workbook(autocase)
     sheet = book.get_sheet_by_name('ReportNo')
     if not sheet:
