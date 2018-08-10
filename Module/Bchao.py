@@ -30,15 +30,13 @@ HospitalNums = operateExcel.All_content('Hid')
 
 
 for Hid in HospitalNums:   #遍历要测试的病历号
-
-    ReportList.del_checkCode(Hid)        #删除该病历号下的校验代码化内容
+    # ReportList.goto_reportList()
+    # ReportList.del_checkCode(Hid)        #删除该病历号下的校验代码化内容
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
+    SyfClinicalReport.yearSelect('2')
     SyfClinicalReport.jiaoyan_Bchao(Hid)
-    SyfClinicalReport.followup_click()
-    SyfClinicalReport.yearSelect(2)
+    SyfClinicalReport.yearSelect('5')
     SyfClinicalReport.jiaoyan_Bchao(Hid)
-    SyfClinicalReport.yearSelect(5)
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
-    SyfClinicalReport.yearSelect(10)
+    SyfClinicalReport.yearSelect('10')
     SyfClinicalReport.jiaoyan_Bchao(Hid)
