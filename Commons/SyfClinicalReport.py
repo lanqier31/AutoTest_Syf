@@ -231,7 +231,6 @@ def jiaoyan_ImgB(Hid):
     alert_close()
     tbodyReportList = driver.find_element_by_id('tbodyReportList')
     reportList = tbodyReportList.find_elements_by_tag_name('tr')
-    print len(reportList)
     if(len(reportList)== 1):
         if (reportList[0].text=='没有报告信息.'):
             return Hid + u'无影像学B报告'

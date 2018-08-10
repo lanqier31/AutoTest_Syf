@@ -15,7 +15,7 @@ LoginUrl='http://'+IP+Version+'/login/index'
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
-loginfo_file_path = os.path.join(basedir, 'Log')
+log_file_path = os.path.join(basedir, 'Log')
 
 screens_file_path=os.path.join(basedir, 'PageScreen')
 
