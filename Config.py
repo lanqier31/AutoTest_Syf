@@ -6,7 +6,7 @@ from selenium import webdriver
 import sys
 
 ChromeDriver=webdriver.Chrome()
-IP = '192.168.10.243/'
+IP = '192.168.10.110/'
 Version = 'syf1.2.0'
 LoginUrl='http://'+IP+Version+'/login/index'
 
