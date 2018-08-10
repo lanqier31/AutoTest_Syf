@@ -8,6 +8,7 @@ from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoAlertPresentException
 from selenium.webdriver.support import expected_conditions as EC
+from openpyxl.reader.excel import load_workbook
 import Config
 import time
 import operateExcel
@@ -15,6 +16,8 @@ from time import sleep
 #进入初诊页面
 
 driver=Config.ChromeDriver
+autocase = Config.autocase_path
+book = load_workbook(autocase)
 
 #病历号输入框
 txtHid ="$('#txtHospitalNumber')"
@@ -58,7 +61,7 @@ def alert_close():
     if alert:
         if (u'外院手术' in alert.text):
             alert.dismiss()
-        elif (u'没有此病人信息'):
+        elif (u'没有此病人信息'in alert.text):
             alert.accept()
             print "不存在该病历号"
         else:
@@ -79,75 +82,35 @@ def is_element_visible(element):
 
 
 #截图
-def screenAsTime():
+def screenpatho():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/%s.jpg' % nowTime)
+    driver.get_screenshot_as_file(r'../PageScreen/pathology/%s.jpg' % nowTime)
 
+
+def screenImgB():
+    nowTime = time.strftime("%Y%m%d.%H.%M.%S")
+    driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
+
+def screenBchao():
+    nowTime = time.strftime("%Y%m%d.%H.%M.%S")
+    driver.get_screenshot_as_file(r'../PageScreen/Bchao/%s.jpg' % nowTime)
+
+def screenPatho(Hid):
+    driver.get_screenshot_as_file(pathoscreen + Hid + '.png')
 
 def undo():
     driver.find_element_by_id('btnRes').click()
     sleep(1)
     alert_close()
+    sleep(1)
 
-def surgery_pathology(Hid):
-    """遍历某病历号下的常规病理，并显示所见和诊断的内容，校验后的所见诊断的内容"""
+
+def selectImgB():
+    driver.find_element_by_id('txtCheckReportType').click()
+    driver.find_element_by_css_selector("div[data-text='影像B']").click()  # 选择病理形态学的报告类别
     WebDriverWait(driver, 10).until(
-            lambda the_driver: the_driver.find_element_by_id('selShouShuList').is_displayed())
-    surgeryList = driver.find_element_by_id('selShouShuList')
-    options = surgeryList.find_elements_by_tag_name('option')
-    if len(options)==0:
-        print "手术次数未获取到"
-        return "error"
-    for i in range(len(options)):   #遍历手术次数
-        WebDriverWait(driver, 10).until(
-            lambda the_driver: the_driver.find_element_by_id('selShouShuList').is_displayed())
-        surgeryList.click()
-        surgeryList.find_elements_by_tag_name('option')[i].click()
-        sleep(2)
-
-        driver.find_element_by_id('txtCheckReportType').click()
-        driver.find_element_by_css_selector("div[data-text='病理形态学']").click()   #选择病理形态学的报告类别
-        WebDriverWait(driver, 10).until(
-            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
-        tbodyReportList = driver.find_element_by_id('tbodyReportList')
-        reportList = tbodyReportList.find_elements_by_tag_name('tr')
-        for j in range(len(reportList)):
-            reportTitle = reportList[j].find_elements_by_tag_name('td')[0].get_attribute('title')
-            if (u'常规组织病理' in reportTitle or u'手术标本' in reportTitle):
-                reportList[j].click()
-                sleep(1)
-                #判断是否有alert
-                alert = EC.alert_is_present()(driver)
-                if alert:
-                    alert.accept()
-                checkResult = driver.find_element_by_xpath('//div[ @ id = "divPathology"]/div[1]/div[5]/div[2]').text
-                checkConclusion = driver.find_element_by_xpath('//div[ @ id = "divPathology"]/div[1]/div[6]/div[2]').text
-                WebDriverWait(driver, 10).until(
-                    lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
-
-                driver.find_element_by_id('btnTest').click()    #点击校验按钮
-                suoj_Fo = driver.find_element_by_xpath('//div[@id="divPathology"]/div[3]/div[5]/div[2]').text   #腺内灶所见
-                zhend_Fo = driver.find_element_by_xpath('//div[@id="divPathology"]/div[3]/div[6]/div[2]').text  #腺内灶诊断
-                suoj_Ln = driver.find_element_by_xpath('//div[@id="divPathology"]/div[3]/div[7]/div[2]').text   #淋巴结所见
-                zhend_Ln = driver.find_element_by_xpath('//*[@id="divPathology"]/div[3]/div[8]/div[2]').text    #淋巴结诊断
-                operateExcel.WriteExcel(Hid,'A'+str(n),'pathology')
-                operateExcel.WriteExcel(checkResult,'B'+str(n),'pathology')
-                operateExcel.WriteExcel(checkConclusion,'C'+str(n),'pathology')
-                operateExcel.WriteExcel(suoj_Fo,'D'+str(n),'pathology')
-                operateExcel.WriteExcel(zhend_Fo,'E'+str(n),'pathology')
-                operateExcel.WriteExcel(suoj_Ln,'F'+str(n),'pathology')
-                operateExcel.WriteExcel(zhend_Ln,'G'+str(n),'pathology')
-                n = n+1
-                nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-                driver.get_screenshot_as_file(r'../PageScreen/%s.jpg' % nowTime)
-                driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-xnz"]').click()
-                driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-ln"]').click()
-                sleep(1)
-                nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-                driver.get_screenshot_as_file(r'../PageScreen/%s.jpg' % nowTime)
-                driver.find_element_by_id('btnQuery').click()
-                WebDriverWait(driver, 10).until(
-                    lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+        lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    sleep(1)
 
 
 def followup_click():
@@ -163,6 +126,7 @@ def yearSelect(value):
         alert.accept()
 
 def jiaoyan_Bchao(Hid):
+    sheet = book['Bchao']
     try:
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
@@ -171,7 +135,12 @@ def jiaoyan_Bchao(Hid):
     alert_close()
     tbodyReportList = driver.find_element_by_id('tbodyReportList')
     reportList = tbodyReportList.find_elements_by_tag_name('tr')
-    for j in range(len(reportList)):  # 遍历术前B超报告份数
+    if(len(reportList)== 1):
+        if (reportList[0].text=='没有报告信息.'):
+            return Hid + u'无B超报告'
+    n = operateExcel.max_row('Bchao') + 1
+    for j in range(len(reportList)):  # 遍历B超报告份数
+        reportList = tbodyReportList.find_elements_by_tag_name('tr')
         reportList[j].click()
         sleep(1)
         # 判断是否有alert
@@ -181,31 +150,110 @@ def jiaoyan_Bchao(Hid):
                 alert.dismiss()
             else:
                 alert.accept()
-        undo()
-        alert_close()
+        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        while ('StateNoCom' != className and 'StateCFCom' != className):
+            WebDriverWait(driver, 20).until_not(
+                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+            undo()
+            alert_close()
+            reportList = tbodyReportList.find_elements_by_tag_name('tr')
+            reportList[j].click()  # 焦点重新回到该报告上
+            className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
         WebDriverWait(driver, 20).until_not(
             lambda the_driver: the_driver.find_element_by_xpath('//div[@class="divBlockHid"]').is_displayed())
-        undo()
-        alert_close()
         checkResult = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
         checkConclusion = driver.find_element_by_xpath(
             '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
         # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
-        suoj_Fo = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').text  # 腺内灶所见
-        zhend_Fo = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺内灶诊断
-        suoj_Ln = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').text  # 淋巴结所见
-        zhend_Ln = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 淋巴结诊断
-        n = operateExcel.max_row('Bchao') + 1
-        operateExcel.WriteExcel(Hid, 'A' + str(n), 'Bchao')
-        operateExcel.WriteExcel(checkResult, 'B' + str(n), 'Bchao')
-        operateExcel.WriteExcel(checkConclusion, 'C' + str(n), 'Bchao')
-        operateExcel.WriteExcel(suoj_Fo, 'D' + str(n), 'Bchao')
-        operateExcel.WriteExcel(zhend_Fo, 'E' + str(n), 'Bchao')
-        operateExcel.WriteExcel(suoj_Ln, 'F' + str(n), 'Bchao')
-        operateExcel.WriteExcel(zhend_Ln, 'G' + str(n), 'Bchao')
-        n = n + 1
+        suoj_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').text  # 腺叶所见（随访）
+        zhend_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺叶诊断
+
+        suoj_XC = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').text  # 腺床所见
+        zhend_XC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 腺床诊断
+
+        suoj_QC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[9]/div[2]').text  # 清扫床所见
+        zhend_QC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[10]/div[2]').text  # 清扫床诊断
+
+        suoj_PL = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[11]/div[2]').text  # 毗邻区所见
+        zhend_PL= driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[12]/div[2]').text  # 毗邻区诊断
+
+        sheet['A'+str(n)] = Hid
+        sheet['B'+str(n)] = checkResult
+        sheet['C'+str(n)] = checkConclusion
+        sheet['D'+str(n)] = suoj_XY
+        sheet['E'+str(n)] = zhend_XY
+        sheet['F'+str(n)] = suoj_XC
+        sheet['G'+str(n)] = zhend_XC
+        sheet['H'+str(n)] = suoj_QC
+        sheet['I'+str(n)] = zhend_QC
+        sheet['J'+str(n)] = suoj_PL
+        sheet['K'+str(n)] = zhend_PL
+
+        book.save(autocase)
+        n = n+1
+        driver.get_screenshot_as_file(bscreen+Hid+'.png')
+        # driver.find_element_by_id('btnQuery').click()
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
 
 
 
+def jiaoyan_ImgB(Hid):
+    """影像B校验代码化"""
+    try:
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    except Exception as e:
+        print e
+    alert_close()
+
+    tbodyReportList = driver.find_element_by_id('tbodyReportList')
+    reportList = tbodyReportList.find_elements_by_tag_name('tr')
+    if(len(reportList)== 1):
+        if (reportList[0].text=='没有报告信息.'):
+            return Hid + u'无影像学B报告'
+    n = operateExcel.max_row('ImgB') + 1
+    for j in range(len(reportList)):  # 遍历影像B报告份数
+        reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        reportList[j].click()
+        sleep(1)
+        # 判断是否有alert
+        alert = EC.alert_is_present()(driver)
+        if alert:
+            if (u'外院手术' in alert.text):
+                alert.dismiss()
+            else:
+                alert.accept()
+                continue
+        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        while('StateNoCom'!= className and 'StateCFCom'!= className):
+            WebDriverWait(driver, 20).until_not(
+                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+            undo()
+            alert_close()
+            reportList = tbodyReportList.find_elements_by_tag_name('tr')
+            reportList[j].click()  #焦点重新回到该报告上
+            className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
+        WebDriverWait(driver, 20).until_not(
+            lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        driver.find_element_by_id('btnCode').click()  # 点击代码化
+        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').text
+
+        operateExcel.WriteExcel(Hid, ('A' + str(n)), 'ImgB')
+        operateExcel.WriteExcel(checkResult, 'B' + str(n), 'ImgB')
+        operateExcel.WriteExcel(checkConclusion, 'C' + str(n), 'ImgB')
+        operateExcel.WriteExcel(AbnormalClassify, 'D' + str(n), 'ImgB')
+        n = n+1
+        nowTime = time.strftime("%Y%m%d.%H.%M.%S")
+        driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
+
+
+def wait_loading():
+    """waiting for divBlockHid disappear"""
+    WebDriverWait(driver, 20).until_not(
+        lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
