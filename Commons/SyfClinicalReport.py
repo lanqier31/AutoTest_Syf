@@ -255,5 +255,9 @@ def jiaoyan_ImgB(Hid):
 
 def wait_loading():
     """waiting for divBlockHid disappear"""
-    WebDriverWait(driver, 20).until_not(
+    result = WebDriverWait(driver, 20).until_not(
         lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+    if result:
+        return True
+    else:
+        return False
