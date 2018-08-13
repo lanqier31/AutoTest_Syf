@@ -106,24 +106,30 @@ def undo():
 
 
 def selectImgB():
+    wait_loading()
     driver.find_element_by_id('txtCheckReportType').click()
+    sleep(1)
     driver.find_element_by_css_selector("div[data-text='影像B']").click()  # 选择病理形态学的报告类别
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
     sleep(1)
 
 
-def followup_click():
-    driver.find_element_by_xpath('//div[@id="divOperationList"]/table/tbody/tr[4]').click()
-
 def yearSelect(value):
-    year = Select(driver.find_element_by_name('selNianQi'))
-    year.select_by_value(value)
+    sleep(2)
     WebDriverWait(driver, 10).until(
-        lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
-    alert = EC.alert_is_present()(driver)
-    if alert:
-        alert.accept()
+        lambda the_driver: the_driver.find_element_by_id('divOperationList').is_displayed())
+    # 读取首次手术下的随访
+    table = driver.find_element_by_xpath('//div[@id="divOperationList"]/table[last()]')
+    sleep(2)
+    table.find_element_by_xpath('tbody/tr[4]/td[1]').click()
+    sleep(1)
+    table.find_element_by_name('selNianQi').click()
+    year = Select(table.find_element_by_name('selNianQi'))
+    year.select_by_value(value)
+    sleep(1)
+    alert_close()
+
 
 def jiaoyan_Bchao(Hid):
     sheet = book['Bchao']
@@ -202,6 +208,7 @@ def jiaoyan_Bchao(Hid):
 
 def jiaoyan_ImgB(Hid):
     """影像B校验代码化"""
+    sheet = book['ImgB']
     try:
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
@@ -242,15 +249,19 @@ def jiaoyan_ImgB(Hid):
         WebDriverWait(driver, 20).until_not(
             lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
         driver.find_element_by_id('btnCode').click()  # 点击代码化
+        wait_loading()
+        FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
         AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').text
-
-        operateExcel.WriteExcel(Hid, ('A' + str(n)), 'ImgB')
-        operateExcel.WriteExcel(checkResult, 'B' + str(n), 'ImgB')
-        operateExcel.WriteExcel(checkConclusion, 'C' + str(n), 'ImgB')
-        operateExcel.WriteExcel(AbnormalClassify, 'D' + str(n), 'ImgB')
+        sheet['A' + str(n)] = Hid
+        sheet['B' + str(n)] = checkResult
+        sheet['C' + str(n)] = checkConclusion
+        sheet['D' + str(n)] = FindingA
+        sheet['E' + str(n)] = AbnormalClassify
+        book.save(autocase)
         n = n+1
-        nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-        driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
+        screenImgB()
+        # nowTime = time.strftime("%Y%m%d.%H.%M.%S")
+        # driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
 
 
 def wait_loading():

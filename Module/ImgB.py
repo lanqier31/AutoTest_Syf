@@ -19,8 +19,6 @@ url=Config.LoginUrl
 Login.login_Syf(url,'30048','5913')
 Login.maxmize_window()
 HospitalNums = operateExcel.All_content('Hid')
-
-
 for Hid in HospitalNums:   #遍历要测试的病历号
     # ReportList.goto_reportList()
     # ReportList.del_checkCode(Hid)        #删除该病历号下的校验代码化内容
