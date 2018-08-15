@@ -109,7 +109,15 @@ def selectImgB():
     wait_loading()
     driver.find_element_by_id('txtCheckReportType').click()
     sleep(1)
-    driver.find_element_by_css_selector("div[data-text='影像B']").click()  # 选择病理形态学的报告类别
+    clickNum = 0
+    ImgB = driver.find_element_by_css_selector("div[data-text='影像B']")
+    while not (ImgB.is_displayed()):
+        if clickNum ==2:
+            return "影像B的报告类别没有找到"
+        else:
+            driver.find_element_by_id('txtCheckReportType').click()
+            clickNum= clickNum+1
+    ImgB.click()  # 选择病理形态学的报告类别
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
     sleep(1)
@@ -117,6 +125,7 @@ def selectImgB():
 
 def yearSelect(value):
     sleep(2)
+    alert_close()
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('divOperationList').is_displayed())
     # 读取首次手术下的随访
@@ -199,7 +208,7 @@ def jiaoyan_Bchao(Hid):
 
         book.save(autocase)
         n = n+1
-        driver.get_screenshot_as_file(bscreen+Hid+'.png')
+        screenBchao()
         # driver.find_element_by_id('btnQuery').click()
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
@@ -249,9 +258,12 @@ def jiaoyan_ImgB(Hid):
         WebDriverWait(driver, 20).until_not(
             lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
         driver.find_element_by_id('btnCode').click()  # 点击代码化
+        sleep(2)
         wait_loading()
         FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
-        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').text
+        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
+        inputliebie = '$(\'input[name = "AbnormalClassify"]\').val()'
+        Leibie = driver.execute_script(inputliebie)
         sheet['A' + str(n)] = Hid
         sheet['B' + str(n)] = checkResult
         sheet['C' + str(n)] = checkConclusion
