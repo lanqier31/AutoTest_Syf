@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*-coding:utf-8 -*-
 # Author:  Weir Gao --<>
-# Purpose:
-# Created: 2018/7/24
+# Purpose:首次术前的B超校验
+# Created: 2018/8/15
 
 
 import sys
@@ -22,13 +22,6 @@ HospitalNums = operateExcel.All_content('Hid')
 
 
 for Hid in HospitalNums:   #遍历要测试的病历号
-    # ReportList.goto_reportList()
-    # ReportList.del_checkCode(Hid)        #删除该病历号下的校验代码化内容
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
-    SyfClinicalReport.yearSelect('2')
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
-    SyfClinicalReport.yearSelect('5')
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
-    SyfClinicalReport.yearSelect('10')
     SyfClinicalReport.jiaoyan_Bchao(Hid)

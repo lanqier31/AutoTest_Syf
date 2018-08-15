@@ -67,20 +67,6 @@ def alert_close():
         else:
             alert.accept()
 
-
-
-
-#判断元素是否可见
-def is_element_visible(element):
-    try:
-        the_element = EC.visibility_of_element_located(element)
-        assert the_element(driver)
-        flag = True
-    except:
-        flag = False
-    return flag
-
-
 #截图
 def screenpatho():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
