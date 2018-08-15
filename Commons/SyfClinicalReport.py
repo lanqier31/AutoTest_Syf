@@ -199,8 +199,6 @@ def jiaoyan_Bchao(Hid):
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
 
-
-
 def jiaoyan_ImgB(Hid):
     """影像B校验代码化"""
     sheet = book['ImgB']
