@@ -1,5 +1,6 @@
 #-*- Coding=utf-8 -*-
 from openpyxl.reader.excel import load_workbook
+from Commons import globals
 import Config
 import os
 import time
@@ -42,6 +43,7 @@ def All_content(sheetname):
     for row in sheet.rows:
         for cell in row:
             con = str(cell.value)
+            globals.log(con)
             contents.append(con)
     return contents[1:]
 

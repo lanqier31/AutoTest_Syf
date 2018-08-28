@@ -3,12 +3,13 @@ import Config
 from openpyxl import Workbook
 
 fileName = Config.log_file_path+'/logfile.txt'
-txtPath = Config.log_file_path+'/shuqian2.txt'
+txtPath = Config.log_file_path+'/redkey.txt'
 
 def log(content):
     f = file(fileName, "a+")
     f.write(content+'\\n')
     f.close()
+
 
 
 def readtxtToExcel(excelName):

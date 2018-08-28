@@ -70,16 +70,16 @@ def alert_close():
 #截图
 def screenpatho():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/pathology/%s.jpg' % nowTime)
+    driver.get_screenshot_as_file(r'../PageScreen/pathology/%s.png' % nowTime)
 
 
 def screenImgB():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
+    driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.png' % nowTime)
 
 def screenBchao():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/Bchao/%s.jpg' % nowTime)
+    driver.get_screenshot_as_file(r'../PageScreen/Bchao/%s.png' % nowTime)
 
 def screenPatho(Hid):
     driver.get_screenshot_as_file(pathoscreen + Hid + '.png')
@@ -142,6 +142,8 @@ def jiaoyan_Bchao(Hid):
     n = operateExcel.max_row('Bchao') + 1
     for j in range(len(reportList)):  # 遍历B超报告份数
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        if (len(reportList) <= j):
+            return (Hid + u"报告日期超出范围")
         reportList[j].click()
         sleep(1)
         # 判断是否有alert
@@ -158,6 +160,8 @@ def jiaoyan_Bchao(Hid):
             undo()
             alert_close()
             reportList = tbodyReportList.find_elements_by_tag_name('tr')
+            if(len(reportList)<=j):
+                return (Hid+u"报告日期超出范围")
             reportList[j].click()  # 焦点重新回到该报告上
             className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
         WebDriverWait(driver, 20).until_not(
@@ -195,6 +199,9 @@ def jiaoyan_Bchao(Hid):
         book.save(autocase)
         n = n+1
         screenBchao()
+        # driver.find_element_by_id('btnCode').click()  # 点击代码化
+        # sleep(3)
+        # screenBchao()
         # driver.find_element_by_id('btnQuery').click()
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
@@ -265,3 +272,61 @@ def wait_loading():
     WebDriverWait(driver, 20).until_not(
         lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
 
+
+def jiaoyan_BFna_cell(Hid):
+    """细胞病理学校验代码化"""
+    sheet = book['Bfna_cell']
+    try:
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    except Exception as e:
+        print e
+    alert_close()
+
+    tbodyReportList = driver.find_element_by_id('tbodyReportList')
+    reportList = tbodyReportList.find_elements_by_tag_name('tr')
+    if (len(reportList) == 1):
+        if (reportList[0].text == '没有报告信息.'):
+            return Hid + u'无报告'
+    n = operateExcel.max_row('Bfna_cell') + 1
+    for j in range(len(reportList)):  # 遍历报告份数
+        reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        reportList[j].click()
+        sleep(1)
+        # 判断是否有alert
+        alert = EC.alert_is_present()(driver)
+        if alert:
+            if (u'外院手术' in alert.text):
+                alert.dismiss()
+            else:
+                alert.accept()
+                continue
+        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        while ('StateNoCom' != className and 'StateCFCom' != className):
+            WebDriverWait(driver, 20).until_not(
+                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+            undo()
+            alert_close()
+            reportList = tbodyReportList.find_elements_by_tag_name('tr')
+            reportList[j].click()  # 焦点重新回到该报告上
+            className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
+        WebDriverWait(driver, 20).until_not(
+            lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        driver.find_element_by_id('btnCode').click()  # 点击代码化
+        sleep(2)
+        wait_loading()
+        FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
+        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
+        inputliebie = '$(\'input[name = "AbnormalClassify"]\').val()'
+        Leibie = driver.execute_script(inputliebie)
+        sheet['A' + str(n)] = Hid
+        sheet['B' + str(n)] = checkResult
+        sheet['C' + str(n)] = checkConclusion
+        sheet['D' + str(n)] = FindingA
+        sheet['E' + str(n)] = AbnormalClassify
+        book.save(autocase)
+        n = n + 1
+        screenImgB()

@@ -2,7 +2,7 @@
 # -*-coding:utf-8 -*-
 # Author:  Weir Gao --<>
 # Purpose:
-# Created: 2018/7/24
+# Created: 2018/8/23
 
 
 import sys
@@ -22,10 +22,4 @@ HospitalNums = operateExcel.All_content('Hid')
 for Hid in HospitalNums:   #遍历要测试的病历号
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
-    SyfClinicalReport.selectImgB()
-    SyfClinicalReport.yearSelect('2')
-    SyfClinicalReport.jiaoyan_ImgB(Hid)
-    SyfClinicalReport.yearSelect('5')
-    SyfClinicalReport.jiaoyan_ImgB(Hid)
-    SyfClinicalReport.yearSelect('10')
-    SyfClinicalReport.jiaoyan_ImgB(Hid)
+    SyfClinicalReport.jiaoyan_Bchao(Hid)
