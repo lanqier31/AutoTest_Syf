@@ -1,9 +1,14 @@
 # -*-coding:utf-8-*-
+import io
 import Config
 from openpyxl import Workbook
+import sys
+# reload(sys)   #必须要reload
+# sys.setdefaultencoding('utf-8')
+
 
 fileName = Config.log_file_path+'/logfile.txt'
-txtPath = Config.log_file_path+'/redkey.txt'
+txtPath = Config.log_file_path+'/4.txt'
 
 def log(content):
     f = file(fileName, "a+")
@@ -13,7 +18,7 @@ def log(content):
 
 
 def readtxtToExcel(excelName):
-    f = open(txtPath,'r')
+    f = io.open(txtPath,'r',encoding='utf-8')
     lines = f.readlines()
     # 新建一个excel文件
     wb = Workbook()
@@ -21,7 +26,9 @@ def readtxtToExcel(excelName):
     sheet = wb.create_sheet('Data', index=1)
     i = 1
     for line in lines:
+
         for r in line.split(','):
+            print r
             sheet['A'+str(i)] = r
             i = i + 1
     wb.save(excelName+'.xlsx')

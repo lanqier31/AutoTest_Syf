@@ -42,6 +42,7 @@ def input_Hid(hid):
     '''输入病历号'''
     # exec_js = "$('#txtHospitalNumber').val(hid)"
     driver.execute_script(txtHid+'.val("' + hid + '")')
+    alert_close()
     driver.execute_script(txtHid+".blur()")
     sleep(5)
     # WebDriverWait(driver, 10).until(
@@ -155,27 +156,28 @@ def jiaoyan_Bchao(Hid):
                 alert.accept()
         className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
         while ('StateNoCom' != className and 'StateCFCom' != className):
-            WebDriverWait(driver, 20).until_not(
-                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+            wait_loading()
             undo()
             alert_close()
+            wait_loading()
             reportList = tbodyReportList.find_elements_by_tag_name('tr')
             if(len(reportList)<=j):
                 return (Hid+u"报告日期超出范围")
             reportList[j].click()  # 焦点重新回到该报告上
+            alert_close()
             className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-        WebDriverWait(driver, 20).until_not(
-            lambda the_driver: the_driver.find_element_by_xpath('//div[@class="divBlockHid"]').is_displayed())
+        wait_loading()
         checkResult = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
         checkConclusion = driver.find_element_by_xpath(
             '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
         # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
-        suoj_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').text  # 腺叶所见（随访）
+        suoj_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').html  # 腺叶所见（随访）
+
         zhend_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺叶诊断
 
-        suoj_XC = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').text  # 腺床所见
+        suoj_XC = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').value  # 腺床所见
         zhend_XC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 腺床诊断
 
         suoj_QC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[9]/div[2]').text  # 清扫床所见
