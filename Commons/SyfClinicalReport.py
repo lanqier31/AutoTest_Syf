@@ -21,7 +21,6 @@ book = load_workbook(autocase)
 
 #病历号输入框
 txtHid ="$('#txtHospitalNumber')"
-
 #截图地址
 screen = Config.screens_file_path
 #Bchao 截图地址
@@ -173,30 +172,37 @@ def jiaoyan_Bchao(Hid):
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
         # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
-        suoj_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').html  # 腺叶所见（随访）
-
-        zhend_XY = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺叶诊断
-
-        suoj_XC = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').value  # 腺床所见
-        zhend_XC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 腺床诊断
-
-        suoj_QC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[9]/div[2]').text  # 清扫床所见
-        zhend_QC = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[10]/div[2]').text  # 清扫床诊断
-
-        suoj_PL = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[11]/div[2]').text  # 毗邻区所见
-        zhend_PL= driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[12]/div[2]').text  # 毗邻区诊断
-
+        # suoj_xy = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').text  # 腺叶所见（随访）
+        # zhend_xy = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺叶诊断
+        #
+        # suoj_xc = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').text  # 腺床所见
+        # zhend_xc = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 腺床诊断
+        #
+        # suoj_qc = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[9]/div[2]').text  # 清扫床所见
+        # zhend_qc = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[10]/div[2]').text  # 清扫床诊断
+        #
+        # suoj_pl = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[11]/div[2]').text  # 毗邻区所见
+        # zhend_pl= driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[12]/div[2]').text  # 毗邻区诊断
+        result = readBCtext()
         sheet['A'+str(n)] = Hid
         sheet['B'+str(n)] = checkResult
         sheet['C'+str(n)] = checkConclusion
-        sheet['D'+str(n)] = suoj_XY
-        sheet['E'+str(n)] = zhend_XY
-        sheet['F'+str(n)] = suoj_XC
-        sheet['G'+str(n)] = zhend_XC
-        sheet['H'+str(n)] = suoj_QC
-        sheet['I'+str(n)] = zhend_QC
-        sheet['J'+str(n)] = suoj_PL
-        sheet['K'+str(n)] = zhend_PL
+        sheet['D'+str(n)] = result['suoj_xy']
+        sheet['E'+str(n)] = result['zhend_xy']
+        sheet['F'+str(n)] = result['suoj_xc']
+        sheet['G'+str(n)] = result['zhend_xc']
+        sheet['H'+str(n)] = result['suoj_qc']
+        sheet['I'+str(n)] = result['zhend_qc']
+        sheet['J'+str(n)] = result['suoj_pl']
+        sheet['K'+str(n)] = result['zhend_pl']
+        # sheet['D'+str(n)] = suoj_xy
+        # sheet['E'+str(n)] = zhend_xy
+        # sheet['F'+str(n)] = suoj_xc
+        # sheet['G'+str(n)] = zhend_xc
+        # sheet['H'+str(n)] = suoj_qc
+        # sheet['I'+str(n)] = zhend_qc
+        # sheet['J'+str(n)] = suoj_pl
+        # sheet['K'+str(n)] = zhend_pl
 
         book.save(autocase)
         n = n+1
@@ -332,3 +338,25 @@ def jiaoyan_BFna_cell(Hid):
         book.save(autocase)
         n = n + 1
         screenImgB()
+
+
+def readBCtext():
+    """"读取超声校验报告中各个框的值"""
+    suoj_xy = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(5) > div.divSuojInput').html();"
+    zhend_xy = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(6) > div.divZhedInput').html();"
+    suoj_xc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(7) > div.divZhedInput').html();"
+    zhend_xc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(8) > div.divZhedInput').html();"
+    suoj_qc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(9) > div.divSuojInput').html();"
+    zhend_qc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(10) > div.divZhedInput').html();"
+    suoj_pl = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(11) > div.divZhedInput').html();"
+    zhend_pl = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(12) > div.divZhedInput').html();"
+    return {
+        "suoj_xy":driver.execute_script(suoj_xy),
+        "zhend_xy":driver.execute_script(zhend_xy),
+        "suoj_xc":driver.execute_script(suoj_xc),
+        "zhend_xc":driver.execute_script(zhend_xc),
+        "suoj_qc":driver.execute_script(suoj_qc),
+        "zhend_qc":driver.execute_script(zhend_qc),
+        "suoj_pl":driver.execute_script(suoj_pl),
+        "zhend_pl":driver.execute_script(zhend_pl),
+    }
