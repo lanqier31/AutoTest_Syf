@@ -8,7 +8,8 @@ import sys
 
 
 fileName = Config.log_file_path+'/logfile.txt'
-txtPath = Config.log_file_path+'/4.txt'
+txtPath = Config.log_file_path+'/zao.txt'
+
 
 def log(content):
     f = file(fileName, "a+")
@@ -18,7 +19,7 @@ def log(content):
 
 
 def readtxtToExcel(excelName):
-    f = io.open(txtPath,'r',encoding='utf-8')
+    f = io.open(txtPath, 'r')
     lines = f.readlines()
     # 新建一个excel文件
     wb = Workbook()

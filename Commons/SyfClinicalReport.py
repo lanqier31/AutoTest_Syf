@@ -5,10 +5,9 @@ from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import NoAlertPresentException
 from selenium.webdriver.support import expected_conditions as EC
 from openpyxl.reader.excel import load_workbook
+from openpyxl.styles import Font, colors, Alignment
 import Config
 import time
 import operateExcel
@@ -172,17 +171,7 @@ def jiaoyan_Bchao(Hid):
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
         # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
-        # suoj_xy = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[5]/div[2]').text  # 腺叶所见（随访）
-        # zhend_xy = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[6]/div[2]').text  # 腺叶诊断
-        #
-        # suoj_xc = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[3]/div[7]/div[2]').text  # 腺床所见
-        # zhend_xc = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[8]/div[2]').text  # 腺床诊断
-        #
-        # suoj_qc = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[9]/div[2]').text  # 清扫床所见
-        # zhend_qc = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[10]/div[2]').text  # 清扫床诊断
-        #
-        # suoj_pl = driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[11]/div[2]').text  # 毗邻区所见
-        # zhend_pl= driver.find_element_by_xpath('//*[@id="divUltrasonography"]/div[3]/div[12]/div[2]').text  # 毗邻区诊断
+        driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-Bchao_01"]').click()
         result = readBCtext()
         sheet['A'+str(n)] = Hid
         sheet['B'+str(n)] = checkResult
@@ -195,22 +184,18 @@ def jiaoyan_Bchao(Hid):
         sheet['I'+str(n)] = result['zhend_qc']
         sheet['J'+str(n)] = result['suoj_pl']
         sheet['K'+str(n)] = result['zhend_pl']
-        # sheet['D'+str(n)] = suoj_xy
-        # sheet['E'+str(n)] = zhend_xy
-        # sheet['F'+str(n)] = suoj_xc
-        # sheet['G'+str(n)] = zhend_xc
-        # sheet['H'+str(n)] = suoj_qc
-        # sheet['I'+str(n)] = zhend_qc
-        # sheet['J'+str(n)] = suoj_pl
-        # sheet['K'+str(n)] = zhend_pl
 
         book.save(autocase)
         n = n+1
         screenBchao()
-        # driver.find_element_by_id('btnCode').click()  # 点击代码化
-        # sleep(3)
-        # screenBchao()
-        # driver.find_element_by_id('btnQuery').click()
+        driver.find_element_by_id('btnCode').click()  # 点击代码化
+        sleep(3)
+        pai_fo() # 腺内灶派生
+        pai_ln() # 淋巴结派生
+        pai_total() # 汇总分析派生
+        sleep(1)
+        screenBchao()
+        driver.find_element_by_id('btnQuery').click() #返回
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
 
@@ -256,18 +241,23 @@ def jiaoyan_ImgB(Hid):
             '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
         WebDriverWait(driver, 20).until_not(
             lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        jiaoyanText = ImgBjiaoyantext()
+        screenImgB()
         driver.find_element_by_id('btnCode').click()  # 点击代码化
         sleep(2)
         wait_loading()
         FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
         AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
-        inputliebie = '$(\'input[name = "AbnormalClassify"]\').val()'
+        inputliebie = 'return $(\'input[name = "AbnormalClassify"]\').val()'
         Leibie = driver.execute_script(inputliebie)
         sheet['A' + str(n)] = Hid
         sheet['B' + str(n)] = checkResult
         sheet['C' + str(n)] = checkConclusion
-        sheet['D' + str(n)] = FindingA
-        sheet['E' + str(n)] = AbnormalClassify
+        sheet['D' + str(n)] = jiaoyanText['suoj_fsz']
+        sheet['E' + str(n)] = jiaoyanText['suoj_xm']
+        sheet['F' + str(n)] = jiaoyanText['suoj_fm']
+        sheet['G' + str(n)] = FindingA
+        sheet['H' + str(n)] = Leibie
         book.save(autocase)
         n = n+1
         screenImgB()
@@ -360,3 +350,49 @@ def readBCtext():
         "suoj_pl":driver.execute_script(suoj_pl),
         "zhend_pl":driver.execute_script(zhend_pl),
     }
+
+
+def ImgBjiaoyantext():
+    """读取影像B校验报告中的各个所见框的值"""
+    suoj_fsz ="return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(5) > div.divSuojInput').html();"
+    suoj_xm = "return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(6) > div.divZhedInput').html();"
+    suoj_fm = "return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(7) > div.divSuojInput').html();"
+
+    return {
+        "suoj_fsz":driver.execute_script(suoj_fsz),
+        "suoj_xm":driver.execute_script(suoj_xm),
+        "suoj_fm":driver.execute_script(suoj_fm),
+    }
+
+
+def pai_fo():
+    """"B超代码化中腺内灶的派生"""
+    xnz = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[3]/div[1]/div')
+    if is_element_visible(xnz):
+        xnz.click()
+
+
+def pai_ln():
+    """B超代码化中淋巴结的派生"""
+    ln = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[5]/div[1]/div')
+    if is_element_visible(ln):
+        ln.click()
+
+
+def pai_total():
+    """B超代码化中汇总分析的派生"""
+    total = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[8]/div[1]/div')
+    if is_element_visible(total):
+        total.click()
+
+
+def is_element_visible(element):
+    """判断是元素是否可见"""
+    try:
+        the_element = EC.visibility_of_element_located(element)
+        assert the_element(driver)
+        flag = True
+    except:
+        flag = False
+    return flag
+
