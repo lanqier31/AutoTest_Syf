@@ -313,8 +313,20 @@ def jiaoyan_AssayA(Hid):
         wait_loading()
         reportList[j].click()
         wait_loading()
-        if 0< j < (len(reportList)-1):
-
+        if j == 0 and len(reportList)>1:
+            reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
+            nextdate = datetime.strptime(reportList[j + 1].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
+            next = (nextdate - reportdate).days
+            if abs(next)==1:
+                wait_loading()
+                reportList[j].click()
+                wait_loading()
+                element= reportList[j+1]
+                target = driver.find_element_by_id('divBiochemical')
+                sleep(1)
+                ActionChains(driver).drag_and_drop(element, target).perform()
+                sleep(1)
+        elif 0< j < (len(reportList)-1):
             predate = datetime.strptime(reportList[j-1].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
             reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
             nextdate = datetime.strptime(reportList[j+1].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
@@ -331,6 +343,12 @@ def jiaoyan_AssayA(Hid):
                 sleep(1)
                 ActionChains(driver).drag_and_drop(element, target).perform()
                 sleep(1)
+        elif j!=0 and j ==len(reportList)-1:
+            predate = datetime.strptime(reportList[j - 1].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
+            reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
+            pre = (reportdate - predate).days
+            if abs(pre)<=1:
+                continue
         wait_loading()
         driver.find_element_by_id('btnCode').click()
         sleep(2)
