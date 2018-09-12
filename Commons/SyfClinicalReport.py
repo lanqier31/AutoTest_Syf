@@ -7,7 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support import expected_conditions as EC
 from openpyxl.reader.excel import load_workbook
-from openpyxl.styles import Font, colors, Alignment
+from datetime import datetime
+# from openpyxl.styles import Font, colors, Alignment
 import Config
 import time
 import operateExcel
@@ -76,6 +77,10 @@ def screenImgB():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
     driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.png' % nowTime)
 
+def screenAssayA():
+    nowTime = time.strftime("%Y%m%d.%H.%M.%S")
+    driver.get_screenshot_as_file(r'../PageScreen/AssayA/%s.png' % nowTime)
+
 def screenBchao():
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
     driver.get_screenshot_as_file(r'../PageScreen/Bchao/%s.png' % nowTime)
@@ -91,6 +96,7 @@ def undo():
 
 
 def selectImgB():
+    """ 报告类型列表中选择影像B"""
     wait_loading()
     driver.find_element_by_id('txtCheckReportType').click()
     sleep(1)
@@ -103,6 +109,24 @@ def selectImgB():
             driver.find_element_by_id('txtCheckReportType').click()
             clickNum= clickNum+1
     ImgB.click()  # 选择病理形态学的报告类别
+    WebDriverWait(driver, 10).until(
+        lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    sleep(1)
+
+
+def selectAssayA():
+    wait_loading()
+    driver.find_element_by_id('txtCheckReportType').click()
+    sleep(1)
+    clickNum = 0
+    AssayA = driver.find_element_by_css_selector("div[data-text='化验A']")
+    while not (AssayA.is_displayed()):
+        if clickNum == 2:
+            return "化验A的报告类别没有找到"
+        else:
+            driver.find_element_by_id('txtCheckReportType').click()
+            clickNum = clickNum + 1
+    AssayA.click()  # 选择病理形态学的报告类别
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
     sleep(1)
@@ -199,6 +223,7 @@ def jiaoyan_Bchao(Hid):
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
 
+
 def jiaoyan_ImgB(Hid):
     """影像B校验代码化"""
     sheet = book['ImgB']
@@ -239,11 +264,14 @@ def jiaoyan_ImgB(Hid):
         checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
         checkConclusion = driver.find_element_by_xpath(
             '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
-        WebDriverWait(driver, 20).until_not(
-            lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        wait_loading()
+        # driver.find_element_by_id('btnTest').click()  # 点击代码化
         jiaoyanText = ImgBjiaoyantext()
         screenImgB()
-        driver.find_element_by_id('btnCode').click()  # 点击代码化
+        btnCode = driver.find_element_by_id('btnCode')  # 点击代码化
+        while not btnCode.is_displayed():
+            driver.find_element_by_id('btnTest').click()
+        btnCode.click()
         sleep(2)
         wait_loading()
         FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
@@ -265,11 +293,50 @@ def jiaoyan_ImgB(Hid):
         # driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
 
 
-def wait_loading():
-    """waiting for divBlockHid disappear"""
-    WebDriverWait(driver, 20).until_not(
-        lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+def jiaoyan_AssayA(Hid):
+    """影像B校验代码化"""
+    # sheet = book['AssayA']
+    try:
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    except Exception as e:
+        print e
+    alert_close()
+    tbodyReportList = driver.find_element_by_id('tbodyReportList')
+    reportList = tbodyReportList.find_elements_by_tag_name('tr')
+    if (len(reportList) == 1):
+        if (reportList[0].text == '没有报告信息.'):
+            return Hid + u'无化验A报告'
+    for j in range(len(reportList)):  # 遍历报告份数
+        sleep(2)
+        reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        wait_loading()
+        reportList[j].click()
+        wait_loading()
+        if 0< j < (len(reportList)-1):
 
+            predate = datetime.strptime(reportList[j-1].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
+            reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
+            nextdate = datetime.strptime(reportList[j+1].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
+            pre = (reportdate-predate).days
+            next = (nextdate-reportdate).days
+            if abs(pre)<=1:
+                continue
+            if abs(next)==1:
+                wait_loading()
+                reportList[j].click()
+                wait_loading()
+                element= reportList[j+1]
+                target = driver.find_element_by_id('divBiochemical')
+                sleep(1)
+                ActionChains(driver).drag_and_drop(element, target).perform()
+                sleep(1)
+        wait_loading()
+        driver.find_element_by_id('btnCode').click()
+        sleep(2)
+        screenAssayA()
+        # driver.find_element_by_id('btnSave').click()
+        # sleep(1)
 
 def jiaoyan_BFna_cell(Hid):
     """细胞病理学校验代码化"""
@@ -396,3 +463,8 @@ def is_element_visible(element):
         flag = False
     return flag
 
+
+def wait_loading():
+    """waiting for divBlockHid disappear"""
+    WebDriverWait(driver, 20).until_not(
+        lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
