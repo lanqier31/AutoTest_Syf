@@ -164,6 +164,7 @@ def jiaoyan_Bchao(Hid):
             return Hid + u'无B超报告'
     n = operateExcel.max_row('Bchao') + 1
     for j in range(len(reportList)):  # 遍历B超报告份数
+        wait_loading()
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
         if (len(reportList) <= j):
             return (Hid + u"报告日期超出范围")
@@ -195,7 +196,7 @@ def jiaoyan_Bchao(Hid):
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
         # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
-        driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-Bchao_01"]').click()
+        jiaoyan_format_Bchao()  #B超校验时对淋巴结进行格式化处理
         result = readBCtext()
         sheet['A'+str(n)] = Hid
         sheet['B'+str(n)] = checkResult
@@ -208,15 +209,12 @@ def jiaoyan_Bchao(Hid):
         sheet['I'+str(n)] = result['zhend_qc']
         sheet['J'+str(n)] = result['suoj_pl']
         sheet['K'+str(n)] = result['zhend_pl']
-
         book.save(autocase)
         n = n+1
         screenBchao()
         driver.find_element_by_id('btnCode').click()  # 点击代码化
         sleep(3)
-        pai_fo() # 腺内灶派生
-        pai_ln() # 淋巴结派生
-        pai_total() # 汇总分析派生
+        Codepai_Bchao() # 代码化中所有的派生
         sleep(1)
         screenBchao()
         driver.find_element_by_id('btnQuery').click() #返回
@@ -450,26 +448,30 @@ def ImgBjiaoyantext():
     }
 
 
-def pai_fo():
-    """"B超代码化中腺内灶的派生"""
-    xnz = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[3]/div[1]/div')
-    if is_element_visible(xnz):
-        xnz.click()
+def Codepai_Bchao():
+    """"B超代码化中的派生"""
+    codePai = {
+    "xnz" : driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[3]/div[1]/div'),
+    "ln" : driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[5]/div[1]/div'),
+    "ln_qs" : driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[6]/div[1]/div'),
+    "ln_pl" : driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[7]/div[1]/div'),
+    "total" : driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[8]/div[1]/div')}
+    for key in codePai:
+        if codePai[key].is_displayed():
+            codePai[key].click()
+            sleep(1)
 
 
-def pai_ln():
-    """B超代码化中淋巴结的派生"""
-    ln = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[5]/div[1]/div')
-    if is_element_visible(ln):
-        ln.click()
-
-
-def pai_total():
-    """B超代码化中汇总分析的派生"""
-    total = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[5]/div[8]/div[1]/div')
-    if is_element_visible(total):
-        total.click()
-
+def jiaoyan_format_Bchao():
+    """B超校验时对淋巴结进行格式化处理"""
+    order_ln1 = driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-Bchao_01"]')
+    order_ln2 = driver.find_element_by_xpath('//span[@data-cmd="InsertOrderedList-Bchao_02"]')
+    if order_ln1.is_displayed():
+        order_ln1.click()
+        sleep(1)
+    if order_ln2.is_displayed():
+        order_ln2.click()
+        sleep(1)
 
 def is_element_visible(element):
     """判断是元素是否可见"""
