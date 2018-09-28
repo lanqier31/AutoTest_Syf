@@ -11,7 +11,7 @@ from datetime import datetime
 # from openpyxl.styles import Font, colors, Alignment
 import Config
 import time
-import operateExcel
+import operateExcel,globals
 from time import sleep
 #进入初诊页面
 
@@ -21,16 +21,6 @@ book = load_workbook(autocase)
 
 #病历号输入框
 txtHid ="$('#txtHospitalNumber')"
-#截图地址
-screen = Config.screens_file_path
-#Bchao 截图地址
-bscreen = Config.screens_file_path+'/Bchao/'
-#影像B截图地址
-imgBscreen = Config.screens_file_path+'/ImgB/'
-#细胞病理学截图地址
-cytoscreen = Config.screens_file_path+'/Cytology/'
-#常规病理截图地址
-pathoscreen = Config.screens_file_path+'/pathology/'
 
 def goto_Report():
 
@@ -41,7 +31,9 @@ def input_Hid(hid):
     '''输入病历号'''
     # exec_js = "$('#txtHospitalNumber').val(hid)"
     driver.execute_script(txtHid+'.val("' + hid + '")')
-    alert_close()
+    alert=alert_close()
+    if alert =='不存在该病历号':
+        globals.log(str(hid)+u'没有此病人信息')
     driver.execute_script(txtHid+".blur()")
     sleep(5)
     # WebDriverWait(driver, 10).until(
@@ -63,7 +55,7 @@ def alert_close():
             alert.dismiss()
         elif (u'没有此病人信息'in alert.text):
             alert.accept()
-            print "不存在该病历号"
+            return "不存在该病历号"
         else:
             alert.accept()
 
@@ -139,7 +131,7 @@ def yearSelect(value):
         lambda the_driver: the_driver.find_element_by_id('divOperationList').is_displayed())
     # 读取首次手术下的随访
     table = driver.find_element_by_xpath('//div[@id="divOperationList"]/table[last()]')
-    sleep(2)
+    sleep(1)
     table.find_element_by_xpath('tbody/tr[4]/td[1]').click()
     sleep(1)
     table.find_element_by_name('selNianQi').click()
@@ -215,7 +207,6 @@ def jiaoyan_Bchao(Hid):
         driver.find_element_by_id('btnCode').click()  # 点击代码化
         sleep(3)
         Codepai_Bchao() # 代码化中所有的派生
-        sleep(1)
         screenBchao()
         driver.find_element_by_id('btnQuery').click() #返回
         WebDriverWait(driver, 10).until(
@@ -273,7 +264,7 @@ def jiaoyan_ImgB(Hid):
         sleep(2)
         wait_loading()
         FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
-        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
+        # AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
         inputliebie = 'return $(\'input[name = "AbnormalClassify"]\').val()'
         Leibie = driver.execute_script(inputliebie)
         sheet['A' + str(n)] = Hid
