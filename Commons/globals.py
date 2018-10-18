@@ -13,7 +13,7 @@ txtPath = Config.log_file_path+'/zao.txt'
 
 def log(content):
     f = file(fileName, "a+")
-    f.write(content+'\\n')
+    f.write(content+'\n')
     f.close()
 
 

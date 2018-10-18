@@ -34,6 +34,7 @@ def input_Hid(hid):
     alert=alert_close()
     if alert =='不存在该病历号':
         globals.log(str(hid)+u'没有此病人信息')
+        return u'没有此病人信息'
     driver.execute_script(txtHid+".blur()")
     sleep(5)
     # WebDriverWait(driver, 10).until(
@@ -130,15 +131,18 @@ def yearSelect(value):
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('divOperationList').is_displayed())
     # 读取首次手术下的随访
-    table = driver.find_element_by_xpath('//div[@id="divOperationList"]/table[last()]')
-    sleep(1)
-    table.find_element_by_xpath('tbody/tr[4]/td[1]').click()
-    sleep(1)
-    table.find_element_by_name('selNianQi').click()
-    year = Select(table.find_element_by_name('selNianQi'))
-    year.select_by_value(value)
-    sleep(1)
-    alert_close()
+    try:
+        table = driver.find_element_by_xpath('//div[@id="divOperationList"]/table[last()]')
+        sleep(1)
+        table.find_element_by_xpath('tbody/tr[4]/td[1]').click()
+        sleep(1)
+        table.find_element_by_name('selNianQi').click()
+        year = Select(table.find_element_by_name('selNianQi'))
+        year.select_by_value(value)
+        sleep(1)
+        alert_close()
+    except Exception as e:
+        print e
 
 
 def jiaoyan_Bchao(Hid):
