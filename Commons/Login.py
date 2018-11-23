@@ -33,8 +33,15 @@ def click_loginbtn():
 #重置用户名
 def ResetLoginName(name):
     WebDriverWait(driver, 10).until(lambda the_driver: the_driver.find_element_by_id(loginbtn_id).is_displayed())
-    driver.find_element_by_id(user_name_id).clear()
-    driver.find_element_by_id(user_name_id).send_keys(name)
+    loginName = driver.find_element_by_id(user_name_id)
+    try:
+
+        ActionChains(driver).move_to_element(loginName).perform()
+        loginName.clear()  # 调用clear()方法去清除
+        print ('test pass: clean successful')
+    except Exception as e:
+        print ("Exception found", format(e))
+    loginName.send_keys(name)
 
 #重置密码
 def ResetPassword(pwd):

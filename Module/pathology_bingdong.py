@@ -130,6 +130,8 @@ for Hid in HospitalNums:   #遍历要测试的病历号
                                 sleep(2)
                                 SyfClinicalReport.screenpatho()
                                 break
+                            else:
+                                SyfClinicalReport.alert_close()
                         elif u'有未校验' in alert.text:
                             alert.accept()
                             driver.find_element_by_id('btnSave').click()

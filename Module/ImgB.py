@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*-coding:utf-8 -*-
 # Author:  Weir Gao --<>
-# Purpose:
+# Purpose:影像B的校验代码化测试
 # Created: 2018/7/24
 
 
@@ -22,10 +22,10 @@ HospitalNums = operateExcel.All_content('Hid')
 for Hid in HospitalNums:   #遍历要测试的病历号
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
-    SyfClinicalReport.selectImgB()
-    SyfClinicalReport.yearSelect('2')
+    SyfClinicalReport.selectType('ImgB')
+    SyfClinicalReport.yearSelect('a','2')
     SyfClinicalReport.jiaoyan_ImgB(Hid)
-    SyfClinicalReport.yearSelect('5')
+    SyfClinicalReport.yearSelect('a','5')
     SyfClinicalReport.jiaoyan_ImgB(Hid)
-    SyfClinicalReport.yearSelect('10')
+    SyfClinicalReport.yearSelect('a','10')
     SyfClinicalReport.jiaoyan_ImgB(Hid)

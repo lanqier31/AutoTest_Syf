@@ -7,10 +7,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support import expected_conditions as EC
 from openpyxl.reader.excel import load_workbook
+from Config import reportType
 from datetime import datetime
 # from openpyxl.styles import Font, colors, Alignment
 import Config
-import time
+import time,os
 import operateExcel,globals
 from time import sleep
 #进入初诊页面
@@ -57,29 +58,21 @@ def alert_close():
         elif (u'没有此病人信息'in alert.text):
             alert.accept()
             return "不存在该病历号"
+        elif u'没有抓取到报告内容'in alert.text:
+            alert.accept()
+
         else:
             alert.accept()
 
 #截图
-def screenpatho():
+def screenPage(reportType):
+    """type:包含config 中 reporttype的key"""
     nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/pathology/%s.png' % nowTime)
+    dirs = r'../PageScreen/' + reportType
+    if not os.path.exists(dirs):
+        os.makedirs(dirs)
+    driver.get_screenshot_as_file(dirs + '/%s.png' % nowTime)
 
-
-def screenImgB():
-    nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.png' % nowTime)
-
-def screenAssayA():
-    nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/AssayA/%s.png' % nowTime)
-
-def screenBchao():
-    nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-    driver.get_screenshot_as_file(r'../PageScreen/Bchao/%s.png' % nowTime)
-
-def screenPatho(Hid):
-    driver.get_screenshot_as_file(pathoscreen + Hid + '.png')
 
 def undo():
     driver.find_element_by_id('btnRes').click()
@@ -88,44 +81,25 @@ def undo():
     sleep(1)
 
 
-def selectImgB():
-    """ 报告类型列表中选择影像B"""
+def selectType(type):
+    """ 报告类型列表中选择报告类型"""
     wait_loading()
     driver.find_element_by_id('txtCheckReportType').click()
     sleep(1)
     clickNum = 0
-    ImgB = driver.find_element_by_css_selector("div[data-text='影像B']")
-    while not (ImgB.is_displayed()):
+    reporttype = driver.find_element_by_css_selector('div[data-text="' +reportType[type]+ '"]')
+    while not (reporttype.is_displayed()):
         if clickNum ==2:
-            return "影像B的报告类别没有找到"
+            return "该报告类别没有找到"
         else:
             driver.find_element_by_id('txtCheckReportType').click()
             clickNum= clickNum+1
-    ImgB.click()  # 选择病理形态学的报告类别
+    reporttype.click()  # 选择该报告类别
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
     sleep(1)
 
-
-def selectAssayA():
-    wait_loading()
-    driver.find_element_by_id('txtCheckReportType').click()
-    sleep(1)
-    clickNum = 0
-    AssayA = driver.find_element_by_css_selector("div[data-text='化验A']")
-    while not (AssayA.is_displayed()):
-        if clickNum == 2:
-            return "化验A的报告类别没有找到"
-        else:
-            driver.find_element_by_id('txtCheckReportType').click()
-            clickNum = clickNum + 1
-    AssayA.click()  # 选择病理形态学的报告类别
-    WebDriverWait(driver, 10).until(
-        lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
-    sleep(1)
-
-
-def yearSelect(value):
+def yearSelect(shiduan,value):
     sleep(2)
     alert_close()
     WebDriverWait(driver, 10).until(
@@ -136,7 +110,10 @@ def yearSelect(value):
         sleep(1)
         table.find_element_by_xpath('tbody/tr[4]/td[1]').click()
         sleep(1)
-        table.find_element_by_name('selNianQi').click()
+        #
+        # table.find_element_by_name('selNianQi')
+        selshiduan = Select(table.find_element_by_name("selShiDuan"))
+        selshiduan.select_by_value(shiduan)
         year = Select(table.find_element_by_name('selNianQi'))
         year.select_by_value(value)
         sleep(1)
@@ -164,6 +141,7 @@ def jiaoyan_Bchao(Hid):
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
         if (len(reportList) <= j):
             return (Hid + u"报告日期超出范围")
+        sleep(3)
         reportList[j].click()
         sleep(1)
         # 判断是否有alert
@@ -191,7 +169,6 @@ def jiaoyan_Bchao(Hid):
             '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('btnTest').is_displayed())
-        # driver.find_element_by_id('btnTest').click()  # 点击校验按钮
         jiaoyan_format_Bchao()  #B超校验时对淋巴结进行格式化处理
         result = readBCtext()
         sheet['A'+str(n)] = Hid
@@ -201,17 +178,19 @@ def jiaoyan_Bchao(Hid):
         sheet['E'+str(n)] = result['zhend_xy']
         sheet['F'+str(n)] = result['suoj_xc']
         sheet['G'+str(n)] = result['zhend_xc']
-        sheet['H'+str(n)] = result['suoj_qc']
-        sheet['I'+str(n)] = result['zhend_qc']
-        sheet['J'+str(n)] = result['suoj_pl']
-        sheet['K'+str(n)] = result['zhend_pl']
+        sheet['H'+str(n)] = result['suoj_qcI']
+        sheet['I'+str(n)] = result['zhend_qcI']
+        sheet['J' + str(n)] = result['suoj_qcI']
+        sheet['K' + str(n)] = result['zhend_qcI']
+        sheet['L'+str(n)] = result['suoj_pl']
+        sheet['M'+str(n)] = result['zhend_pl']
         book.save(autocase)
         n = n+1
-        screenBchao()
+        screenPage('Bchao')
         driver.find_element_by_id('btnCode').click()  # 点击代码化
         sleep(3)
         Codepai_Bchao() # 代码化中所有的派生
-        screenBchao()
+        screenPage('Bchao')
         driver.find_element_by_id('btnQuery').click() #返回
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
@@ -260,7 +239,7 @@ def jiaoyan_ImgB(Hid):
         wait_loading()
         # driver.find_element_by_id('btnTest').click()  # 点击代码化
         jiaoyanText = ImgBjiaoyantext()
-        screenImgB()
+        screenPage('ImgB')
         btnCode = driver.find_element_by_id('btnCode')  # 点击代码化
         while not btnCode.is_displayed():
             driver.find_element_by_id('btnTest').click()
@@ -281,9 +260,7 @@ def jiaoyan_ImgB(Hid):
         sheet['H' + str(n)] = Leibie
         book.save(autocase)
         n = n+1
-        screenImgB()
-        # nowTime = time.strftime("%Y%m%d.%H.%M.%S")
-        # driver.get_screenshot_as_file(r'../PageScreen/ImgB/%s.jpg' % nowTime)
+        screenPage('ImgB')
 
 
 def jiaoyan_AssayA(Hid):
@@ -408,26 +385,119 @@ def jiaoyan_BFna_cell(Hid):
         screenImgB()
 
 
+def jiaoyan_Img131I(Hid):
+    """影像B校验代码化"""
+    sheet = book['Img131I']
+    try:
+        WebDriverWait(driver, 10).until(
+            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
+    except Exception as e:
+        print e
+    alert_close()
+
+    tbodyReportList = driver.find_element_by_id('tbodyReportList')
+    reportList = tbodyReportList.find_elements_by_tag_name('tr')
+    if(len(reportList)== 1):
+        if (reportList[0].text=='没有报告信息.'):
+            return Hid + u'无核素影像报告'
+    n = operateExcel.max_row('ImgB') + 1
+    for j in range(len(reportList)):  # 遍历影报告份数
+        reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        reportList[j].click()
+        sleep(1)
+        # 判断是否有alert
+        alert = EC.alert_is_present()(driver)
+        if alert:
+            if (u'外院手术' in alert.text):
+                alert.dismiss()
+            else:
+                alert.accept()
+                continue
+        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+        while('StateNoCom'!= className and 'StateCFCom'!= className):
+            WebDriverWait(driver, 20).until_not(
+                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+            undo()
+            alert_close()
+            reportList = tbodyReportList.find_elements_by_tag_name('tr')
+            reportList[j].click()  #焦点重新回到该报告上
+            className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
+
+        checkResult = driver.find_element_by_xpath('//div[@id="divNuclideImgExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divNuclideImgExamination"]/div[1]/div[6]/div[2]').text
+        wait_loading()
+        jiaoyanText = readImg131Itext()
+        screenPage('Img131I')
+        btnCode = driver.find_element_by_id('btnCode')  # 点击代码化
+        while not btnCode.is_displayed():
+            driver.find_element_by_id('btnTest').click()
+        btnCode.click()
+        sleep(2)
+        wait_loading()
+        # inputliebie = 'return $(\'input[name = "AbnormalClassify"]\').val()'
+        # Leibie = driver.execute_script(inputliebie)
+        sheet['A' + str(n)] = Hid
+        sheet['B' + str(n)] = checkResult
+        sheet['C' + str(n)] = checkConclusion
+        sheet['D' + str(n)] = jiaoyanText['fo']
+        sheet['E' + str(n)] = jiaoyanText['neckAFT']
+        sheet['F' + str(n)] = jiaoyanText['lung']
+        sheet['G' + str(n)] = jiaoyanText['quanshen']
+        sheet['H' + str(n)] = jiaoyanText['Skeleton']
+        sheet['I' + str(n)] = jiaoyanText['ct']
+        sheet['J' + str(n)] = jiaoyanText['result']
+        book.save(autocase)
+        n = n+1
+        screenPage('Img131I')
+
+
 def readBCtext():
     """"读取超声校验报告中各个框的值"""
-    suoj_xy = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(5) > div.divSuojInput').html();"
-    zhend_xy = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(6) > div.divZhedInput').html();"
-    suoj_xc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(7) > div.divZhedInput').html();"
-    zhend_xc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(8) > div.divZhedInput').html();"
-    suoj_qc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(9) > div.divSuojInput').html();"
-    zhend_qc = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(10) > div.divZhedInput').html();"
-    suoj_pl = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(11) > div.divZhedInput').html();"
-    zhend_pl = "return $('#divUltrasonography > div.divRightBlc03 > div:nth-child(12) > div.divZhedInput').html();"
+    suoj_xy = "return $('div[name=" 'checkResult' "]').html();"
+    zhend_xy = "return $('div[name=" 'checkConclusion' "]').html();"
+    suoj_xc = "return $('div[name=" 'checkResultA' "]').html();"
+    zhend_xc = "return $('div[name=" 'checkConclusionA' "]').html();"
+    suoj_qcI = "return $('div[name=" 'checkResultBlockI' "]').html();"
+    zhend_qcI = "return $('div[name=" 'checkConclusionBlockI' "]').html();"
+    suoj_qcII = "return $('div[name=" 'checkResult2' "]').html();"
+    zhend_qcII = "return $('div[name=" 'checkConclusion2' "]').html();"
+    suoj_pl = "return $('div[name=" 'checkResult2A' "]').html();"
+    zhend_pl = "return $('div[name=" 'checkConclusion2A' "]').html();"
     return {
         "suoj_xy":driver.execute_script(suoj_xy),
         "zhend_xy":driver.execute_script(zhend_xy),
         "suoj_xc":driver.execute_script(suoj_xc),
         "zhend_xc":driver.execute_script(zhend_xc),
-        "suoj_qc":driver.execute_script(suoj_qc),
-        "zhend_qc":driver.execute_script(zhend_qc),
+        "suoj_qcI":driver.execute_script(suoj_qcI),
+        "zhend_qcI":driver.execute_script(zhend_qcI),
+        "suoj_qcII": driver.execute_script(suoj_qcII),
+        "zhend_qcII": driver.execute_script(zhend_qcII),
         "suoj_pl":driver.execute_script(suoj_pl),
         "zhend_pl":driver.execute_script(zhend_pl),
     }
+
+
+def readImg131Itext():
+    """"读取核素影像中校验各个分框的值"""
+    fo = "return $('div[name=" 'checkResult' "]').html();"
+    neckAFT = "return $('div[name=" 'NeckAFT' "]').html();"
+    lung = "return $('div[name=" 'checkBothLungMediastinum' "]').html();"
+    quanshen = "return $('div[name=" 'checkWholeSkeleton' "]').html();"
+    Skeleton = "return $('div[name=" 'checkWholebody' "]').html();"
+    ct = "return $('div[name=" 'checkMachineCT' "]').html();"
+    result = "return $('div[name=" 'checkConclusion' "]').html();"
+
+    return {
+        "fo":driver.execute_script(fo),
+        "neckAFT":driver.execute_script(neckAFT),
+        "lung":driver.execute_script(lung),
+        "quanshen":driver.execute_script(quanshen),
+        "Skeleton":driver.execute_script(Skeleton),
+        "ct":driver.execute_script(ct),
+        "result": driver.execute_script(result),
+    }
+
 
 
 def ImgBjiaoyantext():
@@ -435,7 +505,6 @@ def ImgBjiaoyantext():
     suoj_fsz ="return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(5) > div.divSuojInput').html();"
     suoj_xm = "return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(6) > div.divZhedInput').html();"
     suoj_fm = "return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(7) > div.divSuojInput').html();"
-
     return {
         "suoj_fsz":driver.execute_script(suoj_fsz),
         "suoj_xm":driver.execute_script(suoj_xm),
@@ -481,5 +550,5 @@ def is_element_visible(element):
 
 def wait_loading():
     """waiting for divBlockHid disappear"""
-    WebDriverWait(driver, 20).until_not(
+    WebDriverWait(driver, 30).until_not(
         lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())

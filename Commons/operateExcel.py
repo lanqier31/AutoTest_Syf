@@ -1,5 +1,6 @@
 #-*- Coding=utf-8 -*-
 from openpyxl.reader.excel import load_workbook
+from openpyxl import workbook
 from Commons import globals
 import Config
 import os
