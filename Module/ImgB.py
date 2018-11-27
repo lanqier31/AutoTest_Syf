@@ -16,7 +16,7 @@ driver=Config.ChromeDriver
 #Url for login is a global varible
 url=Config.LoginUrl
 
-Login.login_Syf(url,'30048','5913')
+Login.login_Syf(url,'30048','8613')
 Login.maxmize_window()
 HospitalNums = operateExcel.All_content('Hid')
 for Hid in HospitalNums:   #遍历要测试的病历号
@@ -24,8 +24,8 @@ for Hid in HospitalNums:   #遍历要测试的病历号
     SyfClinicalReport.input_Hid(Hid)
     SyfClinicalReport.selectType('ImgB')
     SyfClinicalReport.yearSelect('a','2')
-    SyfClinicalReport.jiaoyan_ImgB(Hid)
+    SyfClinicalReport.jiaoyan('ImgB', Hid)
     SyfClinicalReport.yearSelect('a','5')
-    SyfClinicalReport.jiaoyan_ImgB(Hid)
+    SyfClinicalReport.jiaoyan('ImgB', Hid)
     SyfClinicalReport.yearSelect('a','10')
-    SyfClinicalReport.jiaoyan_ImgB(Hid)
+    SyfClinicalReport.jiaoyan('ImgB', Hid)

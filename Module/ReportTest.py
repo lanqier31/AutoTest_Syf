@@ -39,5 +39,7 @@ class reportShow(unittest.TestCase):
 
     def test_03surgety_pathology(self):
         SyfClinicalReport.surgery_pathology()
+
+
 if __name__=='__main__':
      unittest.main()

@@ -16,10 +16,9 @@ driver=Config.ChromeDriver
 #Url for login is a global varible
 url=Config.LoginUrl
 
-Login.login_Syf(url,'30048','5913')
-Login.maxmize_window()
+Login.login_Syf(url,'30048','8613')
+# Login.maxmize_window()
 HospitalNums = operateExcel.All_content('Hid')
-
 
 for Hid in HospitalNums:   #遍历要测试的病历号
     SyfClinicalReport.goto_Report()

@@ -38,10 +38,11 @@ redkey = os.path.join(basedir, 'AutoCase/ddd.xlsx')
 
 reportType={
     "Bchao":"超声声像",
-    "pathology" : "病理形态学",
+    "pathology" : "常规病理",
     "pathology_bingdong":"冰冻标本",
+    "ImgA":"影像A",
     "ImgB":"影像B",
-    "Img_131I":"核素影像",
+    "Img131I":"核素影像",
     "AsssyA":"检验A",
     "BFna_cell":"细胞病理",
 }

@@ -84,7 +84,7 @@ def undo():
 def selectType(type):
     """ 报告类型列表中选择报告类型"""
     wait_loading()
-    driver.find_element_by_id('txtCheckReportType').click()
+    driver.find_element_by_id('txtCheckReportTypeA').click()
     sleep(1)
     clickNum = 0
     reporttype = driver.find_element_by_css_selector('div[data-text="' +reportType[type]+ '"]')
@@ -92,12 +92,13 @@ def selectType(type):
         if clickNum ==2:
             return "该报告类别没有找到"
         else:
-            driver.find_element_by_id('txtCheckReportType').click()
+            driver.find_element_by_id('txtCheckReportTypeA').click()
             clickNum= clickNum+1
     reporttype.click()  # 选择该报告类别
     WebDriverWait(driver, 10).until(
         lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
     sleep(1)
+
 
 def yearSelect(shiduan,value):
     sleep(2)
@@ -124,6 +125,7 @@ def yearSelect(shiduan,value):
 
 def jiaoyan_Bchao(Hid):
     sheet = book['Bchao']
+    n = operateExcel.max_row('Bchao') + 1
     try:
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
@@ -135,7 +137,6 @@ def jiaoyan_Bchao(Hid):
     if(len(reportList)== 1):
         if (reportList[0].text=='没有报告信息.'):
             return Hid + u'无B超报告'
-    n = operateExcel.max_row('Bchao') + 1
     for j in range(len(reportList)):  # 遍历B超报告份数
         wait_loading()
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
@@ -196,24 +197,27 @@ def jiaoyan_Bchao(Hid):
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
 
 
-def jiaoyan_ImgB(Hid):
-    """影像B校验代码化"""
-    sheet = book['ImgB']
+def jiaoyan(reportType,Hid):
+    """通用类型：Img131I，ImgA，ImgB"""
+    sheet = book[reportType]
+    row = operateExcel.max_row(reportType) + 1
     try:
         WebDriverWait(driver, 10).until(
             lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
     except Exception as e:
         print e
     alert_close()
-
     tbodyReportList = driver.find_element_by_id('tbodyReportList')
     reportList = tbodyReportList.find_elements_by_tag_name('tr')
     if(len(reportList)== 1):
         if (reportList[0].text=='没有报告信息.'):
-            return Hid + u'无影像学B报告'
-    n = operateExcel.max_row('ImgB') + 1
-    for j in range(len(reportList)):  # 遍历影像B报告份数
+            return Hid + u'无B超报告'
+    for j in range(len(reportList)):  # 遍历B超报告份数
+        wait_loading()
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
+        if (len(reportList) <= j):
+            return (Hid + u"报告日期超出范围")
+        sleep(3)
         reportList[j].click()
         sleep(1)
         # 判断是否有alert
@@ -223,44 +227,32 @@ def jiaoyan_ImgB(Hid):
                 alert.dismiss()
             else:
                 alert.accept()
-                continue
         className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-        while('StateNoCom'!= className and 'StateCFCom'!= className):
-            WebDriverWait(driver, 20).until_not(
-                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+        while ('StateNoCom' != className and 'StateCFCom' != className):
+            wait_loading()
             undo()
             alert_close()
+            wait_loading()
             reportList = tbodyReportList.find_elements_by_tag_name('tr')
-            reportList[j].click()  #焦点重新回到该报告上
+            if(len(reportList)<=j):
+                return (Hid+u"报告日期超出范围")
+            reportList[j].click()  # 焦点重新回到该报告上
+            alert_close()
             className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
-        checkConclusion = driver.find_element_by_xpath(
-            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
         wait_loading()
-        # driver.find_element_by_id('btnTest').click()  # 点击代码化
-        jiaoyanText = ImgBjiaoyantext()
-        screenPage('ImgB')
-        btnCode = driver.find_element_by_id('btnCode')  # 点击代码化
-        while not btnCode.is_displayed():
-            driver.find_element_by_id('btnTest').click()
-        btnCode.click()
-        sleep(2)
-        wait_loading()
-        FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
-        # AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
-        inputliebie = 'return $(\'input[name = "AbnormalClassify"]\').val()'
-        Leibie = driver.execute_script(inputliebie)
-        sheet['A' + str(n)] = Hid
-        sheet['B' + str(n)] = checkResult
-        sheet['C' + str(n)] = checkConclusion
-        sheet['D' + str(n)] = jiaoyanText['suoj_fsz']
-        sheet['E' + str(n)] = jiaoyanText['suoj_xm']
-        sheet['F' + str(n)] = jiaoyanText['suoj_fm']
-        sheet['G' + str(n)] = FindingA
-        sheet['H' + str(n)] = Leibie
-        book.save(autocase)
-        n = n+1
-        screenPage('ImgB')
+        yuanshiText = readyuanshiReport(reportType)
+        jiaoyanText = readjiaoyanReport(reportType)
+        zimu = ['A','B','C','D','E','F','G','H','I','J','K']
+        i=0
+        for t in yuanshiText:
+            sheet[zimu[i]+str(row)]=yuanshiText[t]
+            i=i+1
+        for s in jiaoyanText:
+            sheet[zimu[i]+str(row)]=jiaoyanText[s]
+            i=i+1
+        row=row+1
+        operateExcel.SaveExcel(autocase)
+        screenPage(reportType)
 
 
 def jiaoyan_AssayA(Hid):
@@ -322,134 +314,9 @@ def jiaoyan_AssayA(Hid):
         wait_loading()
         driver.find_element_by_id('btnCode').click()
         sleep(2)
-        screenAssayA()
+        screenPage('AssayA')
         # driver.find_element_by_id('btnSave').click()
         # sleep(1)
-
-def jiaoyan_BFna_cell(Hid):
-    """细胞病理学校验代码化"""
-    sheet = book['Bfna_cell']
-    try:
-        WebDriverWait(driver, 10).until(
-            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
-    except Exception as e:
-        print e
-    alert_close()
-
-    tbodyReportList = driver.find_element_by_id('tbodyReportList')
-    reportList = tbodyReportList.find_elements_by_tag_name('tr')
-    if (len(reportList) == 1):
-        if (reportList[0].text == '没有报告信息.'):
-            return Hid + u'无报告'
-    n = operateExcel.max_row('Bfna_cell') + 1
-    for j in range(len(reportList)):  # 遍历报告份数
-        reportList = tbodyReportList.find_elements_by_tag_name('tr')
-        reportList[j].click()
-        sleep(1)
-        # 判断是否有alert
-        alert = EC.alert_is_present()(driver)
-        if alert:
-            if (u'外院手术' in alert.text):
-                alert.dismiss()
-            else:
-                alert.accept()
-                continue
-        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-        while ('StateNoCom' != className and 'StateCFCom' != className):
-            WebDriverWait(driver, 20).until_not(
-                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
-            undo()
-            alert_close()
-            reportList = tbodyReportList.find_elements_by_tag_name('tr')
-            reportList[j].click()  # 焦点重新回到该报告上
-            className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
-        checkConclusion = driver.find_element_by_xpath(
-            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
-        WebDriverWait(driver, 20).until_not(
-            lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
-        driver.find_element_by_id('btnCode').click()  # 点击代码化
-        sleep(2)
-        wait_loading()
-        FindingA = driver.find_element_by_xpath('//div[@name = "MajorAnomalies"]').text
-        AbnormalClassify = driver.find_element_by_xpath('//input[@name="AbnormalClassify"]').get_attribute('value')
-        inputliebie = '$(\'input[name = "AbnormalClassify"]\').val()'
-        Leibie = driver.execute_script(inputliebie)
-        sheet['A' + str(n)] = Hid
-        sheet['B' + str(n)] = checkResult
-        sheet['C' + str(n)] = checkConclusion
-        sheet['D' + str(n)] = FindingA
-        sheet['E' + str(n)] = AbnormalClassify
-        book.save(autocase)
-        n = n + 1
-        screenImgB()
-
-
-def jiaoyan_Img131I(Hid):
-    """影像B校验代码化"""
-    sheet = book['Img131I']
-    try:
-        WebDriverWait(driver, 10).until(
-            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
-    except Exception as e:
-        print e
-    alert_close()
-
-    tbodyReportList = driver.find_element_by_id('tbodyReportList')
-    reportList = tbodyReportList.find_elements_by_tag_name('tr')
-    if(len(reportList)== 1):
-        if (reportList[0].text=='没有报告信息.'):
-            return Hid + u'无核素影像报告'
-    n = operateExcel.max_row('ImgB') + 1
-    for j in range(len(reportList)):  # 遍历影报告份数
-        reportList = tbodyReportList.find_elements_by_tag_name('tr')
-        reportList[j].click()
-        sleep(1)
-        # 判断是否有alert
-        alert = EC.alert_is_present()(driver)
-        if alert:
-            if (u'外院手术' in alert.text):
-                alert.dismiss()
-            else:
-                alert.accept()
-                continue
-        className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-        while('StateNoCom'!= className and 'StateCFCom'!= className):
-            WebDriverWait(driver, 20).until_not(
-                lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
-            undo()
-            alert_close()
-            reportList = tbodyReportList.find_elements_by_tag_name('tr')
-            reportList[j].click()  #焦点重新回到该报告上
-            className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
-
-        checkResult = driver.find_element_by_xpath('//div[@id="divNuclideImgExamination"]/div[1]/div[5]/div[2]').text
-        checkConclusion = driver.find_element_by_xpath(
-            '//div[@id="divNuclideImgExamination"]/div[1]/div[6]/div[2]').text
-        wait_loading()
-        jiaoyanText = readImg131Itext()
-        screenPage('Img131I')
-        btnCode = driver.find_element_by_id('btnCode')  # 点击代码化
-        while not btnCode.is_displayed():
-            driver.find_element_by_id('btnTest').click()
-        btnCode.click()
-        sleep(2)
-        wait_loading()
-        # inputliebie = 'return $(\'input[name = "AbnormalClassify"]\').val()'
-        # Leibie = driver.execute_script(inputliebie)
-        sheet['A' + str(n)] = Hid
-        sheet['B' + str(n)] = checkResult
-        sheet['C' + str(n)] = checkConclusion
-        sheet['D' + str(n)] = jiaoyanText['fo']
-        sheet['E' + str(n)] = jiaoyanText['neckAFT']
-        sheet['F' + str(n)] = jiaoyanText['lung']
-        sheet['G' + str(n)] = jiaoyanText['quanshen']
-        sheet['H' + str(n)] = jiaoyanText['Skeleton']
-        sheet['I' + str(n)] = jiaoyanText['ct']
-        sheet['J' + str(n)] = jiaoyanText['result']
-        book.save(autocase)
-        n = n+1
-        screenPage('Img131I')
 
 
 def readBCtext():
@@ -499,6 +366,19 @@ def readImg131Itext():
     }
 
 
+def ImgAjiaoyantext():
+    """读取影像A校验报告中的各个所见框的值"""
+    fo = "return $('div[name=" 'checkResult' "]').html();"
+    AFT = "return $('div[name=" 'AFT_YxA' "]').html();"
+    larbloodVessels = "return $('div[name=" 'larbloodVessels' "]').html();"
+    TrachEsophagus = "return $('div[name=" 'TrachEsophagus' "]').html();"
+    return {
+        "fo":driver.execute_script(fo),
+        "AFT":driver.execute_script(AFT),
+        "larbloodVessels":driver.execute_script(larbloodVessels),
+        "TrachEsophagus":driver.execute_script(TrachEsophagus),
+    }
+
 
 def ImgBjiaoyantext():
     """读取影像B校验报告中的各个所见框的值"""
@@ -537,6 +417,7 @@ def jiaoyan_format_Bchao():
         order_ln2.click()
         sleep(1)
 
+
 def is_element_visible(element):
     """判断是元素是否可见"""
     try:
@@ -552,3 +433,52 @@ def wait_loading():
     """waiting for divBlockHid disappear"""
     WebDriverWait(driver, 30).until_not(
         lambda the_driver: the_driver.find_element_by_class_name('divBlockHid').is_displayed())
+
+
+def readyuanshiReport(reportType):
+    checkResult=''
+    checkConclusion=''
+    if reportType=='Bchao':
+        checkResult = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
+    if reportType =='ImgB':
+        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
+    if reportType=='ImgA':
+        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExaminationB"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divImagingExaminationB"]/div[1]/div[6]/div[2]').text
+    if reportType =='Img131I':
+        checkResult = driver.find_element_by_xpath('//div[@id="divNuclideImgExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divNuclideImgExamination"]/div[1]/div[6]/div[2]').text
+    if reportType == 'Bfna_cell':
+        checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath(
+            '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
+
+    return {
+        "checkResult":checkResult,
+        "checkConclusion":checkConclusion,
+    }
+
+
+def readjiaoyanReport(reportType):
+    result={}
+    if reportType =='Bchao':
+        result=readBCtext()
+    if reportType == 'ImgA':
+        result = ImgAjiaoyantext()
+    if reportType == 'ImgB':
+        result = ImgBjiaoyantext()
+    if reportType == 'Img131I':
+        result = readImg131Itext()
+
+    return result
+
+
+
+
+
