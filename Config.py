@@ -31,13 +31,15 @@ log_file_path = os.path.join(basedir, 'Log')
 screens_file_path=os.path.join(basedir, 'PageScreen')
 autocase_path = os.path.join(basedir, 'AutoCase/AutoTestCases.xlsx')
 interfaceTest_path = os.path.join(basedir, 'AutoCase/interfaceTest.xlsx')
+jiekou_path = os.path.join(basedir, 'AutoCase/body.txt')
 redkey = os.path.join(basedir, 'AutoCase/ddd.xlsx')
 
 #sqlserver
 # conn = pymssql.connect('192.168.10.164', 'sa', 'sa', '20180806')
 
 reportType={
-    "Bchao":"超声声像",
+    "Bchao_pre":"超声声像",
+    "Bchao_fellowup":"超声声像",
     "pathology" : "常规病理",
     "pathology_bingdong":"冰冻标本",
     "ImgA":"影像A",

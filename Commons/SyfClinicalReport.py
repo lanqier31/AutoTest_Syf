@@ -8,6 +8,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support import expected_conditions as EC
 from openpyxl.reader.excel import load_workbook
 from Config import reportType
+from collections import OrderedDict
 from datetime import datetime
 # from openpyxl.styles import Font, colors, Alignment
 import Config
@@ -101,6 +102,8 @@ def selectType(type):
 
 
 def yearSelect(shiduan,value):
+    """shiduan：a:年期内；b：测评段；c：孕药控；
+        value：2；5；10；"""
     sleep(2)
     alert_close()
     WebDriverWait(driver, 10).until(
@@ -211,8 +214,8 @@ def jiaoyan(reportType,Hid):
     reportList = tbodyReportList.find_elements_by_tag_name('tr')
     if(len(reportList)== 1):
         if (reportList[0].text=='没有报告信息.'):
-            return Hid + u'无B超报告'
-    for j in range(len(reportList)):  # 遍历B超报告份数
+            return Hid + u'无报告'
+    for j in range(len(reportList)):  # 遍历报告份数
         wait_loading()
         reportList = tbodyReportList.find_elements_by_tag_name('tr')
         if (len(reportList) <= j):
@@ -242,7 +245,8 @@ def jiaoyan(reportType,Hid):
         wait_loading()
         yuanshiText = readyuanshiReport(reportType)
         jiaoyanText = readjiaoyanReport(reportType)
-        zimu = ['A','B','C','D','E','F','G','H','I','J','K']
+        zimu = ['B','C','D','E','F','G','H','I','J','K']
+        sheet['A'+str(row)]=Hid
         i=0
         for t in yuanshiText:
             sheet[zimu[i]+str(row)]=yuanshiText[t]
@@ -251,75 +255,25 @@ def jiaoyan(reportType,Hid):
             sheet[zimu[i]+str(row)]=jiaoyanText[s]
             i=i+1
         row=row+1
-        operateExcel.SaveExcel(autocase)
+        book.save(autocase)
         screenPage(reportType)
 
 
-def jiaoyan_AssayA(Hid):
-    """影像B校验代码化"""
-    # sheet = book['AssayA']
-    try:
-        WebDriverWait(driver, 10).until(
-            lambda the_driver: the_driver.find_element_by_id('tbodyReportList').is_displayed())
-    except Exception as e:
-        print e
-    alert_close()
-    tbodyReportList = driver.find_element_by_id('tbodyReportList')
-    reportList = tbodyReportList.find_elements_by_tag_name('tr')
-    if (len(reportList) == 1):
-        if (reportList[0].text == '没有报告信息.'):
-            return Hid + u'无化验A报告'
-    for j in range(len(reportList)):  # 遍历报告份数
-        sleep(2)
-        reportList = tbodyReportList.find_elements_by_tag_name('tr')
-        wait_loading()
-        reportList[j].click()
-        wait_loading()
-        if j == 0 and len(reportList)>1:
-            reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
-            nextdate = datetime.strptime(reportList[j + 1].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
-            next = (nextdate - reportdate).days
-            if abs(next)==1:
-                wait_loading()
-                reportList[j].click()
-                wait_loading()
-                element= reportList[j+1]
-                target = driver.find_element_by_id('divBiochemical')
-                sleep(1)
-                ActionChains(driver).drag_and_drop(element, target).perform()
-                sleep(1)
-        elif 0< j < (len(reportList)-1):
-            predate = datetime.strptime(reportList[j-1].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
-            reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
-            nextdate = datetime.strptime(reportList[j+1].find_element_by_xpath('td[2]').text,'%Y-%m-%d')
-            pre = (reportdate-predate).days
-            next = (nextdate-reportdate).days
-            if abs(pre)<=1:
-                continue
-            if abs(next)==1:
-                wait_loading()
-                reportList[j].click()
-                wait_loading()
-                element= reportList[j+1]
-                target = driver.find_element_by_id('divBiochemical')
-                sleep(1)
-                ActionChains(driver).drag_and_drop(element, target).perform()
-                sleep(1)
-        elif j!=0 and j ==len(reportList)-1:
-            predate = datetime.strptime(reportList[j - 1].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
-            reportdate = datetime.strptime(reportList[j].find_element_by_xpath('td[2]').text, '%Y-%m-%d')
-            pre = (reportdate - predate).days
-            if abs(pre)<=1:
-                continue
-        wait_loading()
-        driver.find_element_by_id('btnCode').click()
-        sleep(2)
-        screenPage('AssayA')
-        # driver.find_element_by_id('btnSave').click()
-        # sleep(1)
+def readBC_pretext():
+    """"读取超声校验报告中各个框的值"""
+    suoj_xy = "return $('div[name=" 'checkResult' "]').html();"
+    zhend_xy = "return $('div[name=" 'checkConclusion' "]').html();"
+    suoj_ln = "return $('div[name=" 'checkResult2' "]').html();"
+    zhend_ln = "return $('div[name=" 'checkConclusion2' "]').html();"
 
+    return {
+        "suoj_xy": driver.execute_script(suoj_xy),
+        "zhend_xy": driver.execute_script(zhend_xy),
+        "suoj_ln": driver.execute_script(suoj_ln),
+        "zhend_ln": driver.execute_script(zhend_ln),
+    }
 
-def readBCtext():
+def readBC_fellowuptext():
     """"读取超声校验报告中各个框的值"""
     suoj_xy = "return $('div[name=" 'checkResult' "]').html();"
     zhend_xy = "return $('div[name=" 'checkConclusion' "]').html();"
@@ -382,14 +336,20 @@ def ImgAjiaoyantext():
 
 def ImgBjiaoyantext():
     """读取影像B校验报告中的各个所见框的值"""
-    suoj_fsz ="return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(5) > div.divSuojInput').html();"
-    suoj_xm = "return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(6) > div.divZhedInput').html();"
-    suoj_fm = "return $('#divImagingExamination > div.divRightBlc03 > div:nth-child(7) > div.divSuojInput').html();"
-    return {
-        "suoj_fsz":driver.execute_script(suoj_fsz),
-        "suoj_xm":driver.execute_script(suoj_xm),
-        "suoj_fm":driver.execute_script(suoj_fm),
-    }
+    res = OrderedDict()
+
+    suoj_fsz ="return $('div[name=" 'checkResult' "]').html();"
+    suoj_fm = "return $('div[name=" 'checkResultFm' "]').html();"
+    suoj_xxg = "return $('div[name=" 'checkResultXxg' "]').html();"
+    suoj_qt = "return $('div[name=" 'checkResultFj' "]').html();"
+    jielun = "return $('div[name=" 'checkConclusion' "]').html();"
+    res['suoj_fsz'] = driver.execute_script(suoj_fsz)
+    res['suoj_fm'] = driver.execute_script(suoj_fm)
+    res['suoj_xxg'] = driver.execute_script(suoj_xxg)
+    res['suoj_qt'] = driver.execute_script(suoj_qt)
+    res['jielun'] = driver.execute_script(jielun)
+    return res
+
 
 
 def Codepai_Bchao():
@@ -438,7 +398,7 @@ def wait_loading():
 def readyuanshiReport(reportType):
     checkResult=''
     checkConclusion=''
-    if reportType=='Bchao':
+    if reportType in ['Bchao_pre','Bchao_fellowup']:
         checkResult = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
         checkConclusion = driver.find_element_by_xpath(
             '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
@@ -467,8 +427,10 @@ def readyuanshiReport(reportType):
 
 def readjiaoyanReport(reportType):
     result={}
-    if reportType =='Bchao':
-        result=readBCtext()
+    if reportType =='Bchao_fellowup':
+        result= readBC_fellowuptext()
+    if reportType == 'Bchao_pre':
+        result = readBC_pretext()
     if reportType == 'ImgA':
         result = ImgAjiaoyantext()
     if reportType == 'ImgB':

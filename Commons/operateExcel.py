@@ -17,9 +17,9 @@ def WriteExcel(result, locator,sheetname):
     sheet[locator]= result
 
 
-def SaveExcel(excelName):
-    book = load_workbook(excelName)
-    book.save(excelName)
+def SaveExcel():
+    book = load_workbook(autocase)
+    book.save(autocase)
 
 
 def ReadExcel(locator,sheetname):

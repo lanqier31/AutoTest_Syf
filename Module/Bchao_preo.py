@@ -23,4 +23,4 @@ HospitalNums = operateExcel.All_content('Hid')
 for Hid in HospitalNums:   #遍历要测试的病历号
     SyfClinicalReport.goto_Report()
     SyfClinicalReport.input_Hid(Hid)
-    SyfClinicalReport.jiaoyan_Bchao(Hid)
+    SyfClinicalReport.jiaoyan('Bchao_pre',Hid)
