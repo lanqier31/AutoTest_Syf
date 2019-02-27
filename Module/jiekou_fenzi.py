@@ -59,6 +59,6 @@ s.headers["User-Agent"]="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML,
 s.headers["X-Requested-With"]="XMLHttpRequest"
 s.headers["Content-Type"]="application/x-www-form-urlencoded; charset=UTF-8"
 s.headers["Accept-Language"]="zh-CN,zh;q=0.9"
-r = s.post(url=url6,data='aaa',verify=False)
+r = s.post(url=url6,data=json3,verify=False)
 json_r = r.json()
 print json_r

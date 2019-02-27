@@ -1,5 +1,6 @@
 #-*- Coding=utf-8 -*-
 from openpyxl.reader.excel import load_workbook
+from openpyxl.styles import Color,Font
 from openpyxl import workbook
 from Commons import globals
 import Config
@@ -60,3 +61,7 @@ def get_column(sheetname):
         con = str(cell.value)
         contents.append(con)
     return contents
+
+def set_color(color,bold=False):
+    font = Font(color=color)
+    return font

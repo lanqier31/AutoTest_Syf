@@ -2,7 +2,7 @@
 # Author：WeirGao
 
 import os
-import pymssql
+
 from selenium import webdriver
 import sys
 reload(sys)   #必须要reload
@@ -14,8 +14,8 @@ driverOptions.add_argument("--start-maximized")  #默认屏幕最大化
 # driverOptions.add_argument("--no-sandbox")
 # driverOptions.add_argument("--disable-dev-shm-usage")
 driverOptions.add_argument('--disable-gpu') #谷歌文档提到需要加上这个属性来规避bug
-
-# driverOptions.add_argument(r"user-data-dir=C:\Users\Administrator\AppData\Local\Google\Chrome\User Data")
+driverOptions.add_argument('disable-infobars') # 规避浏览器显示 Chrome正在受到自动软件的控制
+driverOptions.add_argument(r"user-data-dir=C:\Users\Administrator\AppData\Local\Google\Chrome\User Data")  # 读取用户设置内容
 
 ChromeDriver = webdriver.Chrome("chromedriver",0,driverOptions)
 IP = '192.168.10.243/'
@@ -47,4 +47,5 @@ reportType={
     "Img131I":"核素影像",
     "AsssyA":"检验A",
     "BFna_cell":"细胞病理",
+    "B_FNA":"B-FNA操作",
 }

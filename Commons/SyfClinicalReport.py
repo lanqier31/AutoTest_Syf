@@ -8,11 +8,10 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support import expected_conditions as EC
 from openpyxl.reader.excel import load_workbook
 from Config import reportType
-from collections import OrderedDict
+from collections import OrderedDict   #dict排序
 from datetime import datetime
-# from openpyxl.styles import Font, colors, Alignment
 import Config
-import time,os
+import time,os,re
 import operateExcel,globals
 from time import sleep
 #进入初诊页面
@@ -201,7 +200,7 @@ def jiaoyan_Bchao(Hid):
 
 
 def jiaoyan(reportType,Hid):
-    """通用类型：Img131I，ImgA，ImgB"""
+    """通用类型：Img131I，ImgA，ImgB,BC"""
     sheet = book[reportType]
     row = operateExcel.max_row(reportType) + 1
     try:
@@ -243,40 +242,48 @@ def jiaoyan(reportType,Hid):
             alert_close()
             className = reportList[j].find_element_by_xpath('td[3]/div').get_attribute("class")
         wait_loading()
+        format(reportType)
         yuanshiText = readyuanshiReport(reportType)
         jiaoyanText = readjiaoyanReport(reportType)
-        zimu = ['B','C','D','E','F','G','H','I','J','K']
+        zimu = ['B','C','D','E','F','G','H','I','J','K','L','M','N']
         sheet['A'+str(row)]=Hid
         i=0
         for t in yuanshiText:
             sheet[zimu[i]+str(row)]=yuanshiText[t]
             i=i+1
         for s in jiaoyanText:
-            sheet[zimu[i]+str(row)]=jiaoyanText[s]
+            sheet[zimu[i]+str(row)] = jiaoyanText[s]
+            # fons = re.findall(r'(?<=<font color="#ff0000">).+?(?=</font>)', jiaoyanText[s])
+            # if fons:
+            #     for f in fons:
+            #         print f
             i=i+1
         row=row+1
         book.save(autocase)
         screenPage(reportType)
 
 
+
 def readBC_pretext():
     """"读取超声校验报告中各个框的值"""
-    suoj_xy = "return $('div[name=" 'checkResult' "]').html();"
-    zhend_xy = "return $('div[name=" 'checkConclusion' "]').html();"
+    res = OrderedDict()
+    suoj_xy = "return $('#divUltrasonography').find('div[name=" 'checkResult' "]:eq(1)').html();"
+    zhend_xy = "return $('#divUltrasonography').find('div[name=" 'checkConclusion' "]:eq(1)').html();"
     suoj_ln = "return $('div[name=" 'checkResult2' "]').html();"
     zhend_ln = "return $('div[name=" 'checkConclusion2' "]').html();"
 
-    return {
-        "suoj_xy": driver.execute_script(suoj_xy),
-        "zhend_xy": driver.execute_script(zhend_xy),
-        "suoj_ln": driver.execute_script(suoj_ln),
-        "zhend_ln": driver.execute_script(zhend_ln),
-    }
+    res['suoj_xy'] = driver.execute_script(suoj_xy)
+    res['zhend_xy'] = driver.execute_script(zhend_xy)
+    res['suoj_ln'] = driver.execute_script(suoj_ln)
+    res['zhend_ln'] = driver.execute_script(zhend_ln)
+
+    return res
 
 def readBC_fellowuptext():
     """"读取超声校验报告中各个框的值"""
-    suoj_xy = "return $('div[name=" 'checkResult' "]').html();"
-    zhend_xy = "return $('div[name=" 'checkConclusion' "]').html();"
+    res = OrderedDict()
+    suoj_xy = "return $('#divUltrasonography').find('div[name=" 'checkResult' "]:eq(1)').html();"
+    zhend_xy = "return $('#divUltrasonography').find('div[name=" 'checkConclusion' "]:eq(1)').html();"
     suoj_xc = "return $('div[name=" 'checkResultA' "]').html();"
     zhend_xc = "return $('div[name=" 'checkConclusionA' "]').html();"
     suoj_qcI = "return $('div[name=" 'checkResultBlockI' "]').html();"
@@ -285,72 +292,73 @@ def readBC_fellowuptext():
     zhend_qcII = "return $('div[name=" 'checkConclusion2' "]').html();"
     suoj_pl = "return $('div[name=" 'checkResult2A' "]').html();"
     zhend_pl = "return $('div[name=" 'checkConclusion2A' "]').html();"
-    return {
-        "suoj_xy":driver.execute_script(suoj_xy),
-        "zhend_xy":driver.execute_script(zhend_xy),
-        "suoj_xc":driver.execute_script(suoj_xc),
-        "zhend_xc":driver.execute_script(zhend_xc),
-        "suoj_qcI":driver.execute_script(suoj_qcI),
-        "zhend_qcI":driver.execute_script(zhend_qcI),
-        "suoj_qcII": driver.execute_script(suoj_qcII),
-        "zhend_qcII": driver.execute_script(zhend_qcII),
-        "suoj_pl":driver.execute_script(suoj_pl),
-        "zhend_pl":driver.execute_script(zhend_pl),
-    }
+
+    res['suoj_xy'] = driver.execute_script(suoj_xy)
+    res['zhend_xy'] = driver.execute_script(zhend_xy)
+    res['suoj_xc'] = driver.execute_script(suoj_xc)
+    res['zhend_xc'] = driver.execute_script(zhend_xc)
+    res['suoj_qcI'] = driver.execute_script(suoj_qcI)
+    res['zhend_qcI'] = driver.execute_script(zhend_qcI)
+    res['suoj_qcII'] = driver.execute_script(suoj_qcII)
+    res['zhend_qcII'] = driver.execute_script(zhend_qcII)
+    res['suoj_pl'] = driver.execute_script(suoj_pl)
+    res['zhend_pl'] = driver.execute_script(zhend_pl)
+    return res
 
 
 def readImg131Itext():
     """"读取核素影像中校验各个分框的值"""
-    fo = "return $('div[name=" 'checkResult' "]').html();"
+    res = OrderedDict()
+    fo = "return $('#divNuclideImgExamination').find('div[name=" 'checkResult' "]:eq(1)').html();"
     neckAFT = "return $('div[name=" 'NeckAFT' "]').html();"
     lung = "return $('div[name=" 'checkBothLungMediastinum' "]').html();"
     quanshen = "return $('div[name=" 'checkWholeSkeleton' "]').html();"
     Skeleton = "return $('div[name=" 'checkWholebody' "]').html();"
     ct = "return $('div[name=" 'checkMachineCT' "]').html();"
-    result = "return $('div[name=" 'checkConclusion' "]').html();"
+    result = "return $('#divNuclideImgExamination').find('div[name=" 'checkConclusion' "]:eq(1)').html();"
 
-    return {
-        "fo":driver.execute_script(fo),
-        "neckAFT":driver.execute_script(neckAFT),
-        "lung":driver.execute_script(lung),
-        "quanshen":driver.execute_script(quanshen),
-        "Skeleton":driver.execute_script(Skeleton),
-        "ct":driver.execute_script(ct),
-        "result": driver.execute_script(result),
-    }
+    res['fo'] = driver.execute_script(fo)
+    res['neckAFT'] = driver.execute_script(neckAFT)
+    res['lung'] = driver.execute_script(lung)
+    res['quanshen'] = driver.execute_script(quanshen)
+    res['Skeleton'] = driver.execute_script(Skeleton)
+    res['ct'] = driver.execute_script(ct)
+    res['result'] = driver.execute_script(result)
+
+    return res
 
 
 def ImgAjiaoyantext():
     """读取影像A校验报告中的各个所见框的值"""
-    fo = "return $('div[name=" 'checkResult' "]').html();"
+    res = OrderedDict()
+    fo ="return $('#divImagingExaminationB').find('div[name=" 'checkResult' "]:eq(1)').html();"
     AFT = "return $('div[name=" 'AFT_YxA' "]').html();"
     larbloodVessels = "return $('div[name=" 'larbloodVessels' "]').html();"
     TrachEsophagus = "return $('div[name=" 'TrachEsophagus' "]').html();"
-    return {
-        "fo":driver.execute_script(fo),
-        "AFT":driver.execute_script(AFT),
-        "larbloodVessels":driver.execute_script(larbloodVessels),
-        "TrachEsophagus":driver.execute_script(TrachEsophagus),
-    }
+
+    res['fo'] = driver.execute_script(fo)
+    res['AFT'] = driver.execute_script(AFT)
+    res['larbloodVessels'] = driver.execute_script(larbloodVessels)
+    res['TrachEsophagus'] = driver.execute_script(TrachEsophagus)
+
+    return res
 
 
 def ImgBjiaoyantext():
     """读取影像B校验报告中的各个所见框的值"""
     res = OrderedDict()
 
-    suoj_fsz ="return $('div[name=" 'checkResult' "]').html();"
+    suoj_fsz = "return $('#divImagingExamination').find('div[name=" 'checkResult' "]:eq(1)').html();"
     suoj_fm = "return $('div[name=" 'checkResultFm' "]').html();"
     suoj_xxg = "return $('div[name=" 'checkResultXxg' "]').html();"
     suoj_qt = "return $('div[name=" 'checkResultFj' "]').html();"
-    jielun = "return $('div[name=" 'checkConclusion' "]').html();"
+    jielun = "return $('#divImagingExamination').find('div[name=" 'checkConclusion' "]:eq(1)').html();"
     res['suoj_fsz'] = driver.execute_script(suoj_fsz)
     res['suoj_fm'] = driver.execute_script(suoj_fm)
     res['suoj_xxg'] = driver.execute_script(suoj_xxg)
     res['suoj_qt'] = driver.execute_script(suoj_qt)
     res['jielun'] = driver.execute_script(jielun)
     return res
-
-
 
 def Codepai_Bchao():
     """"B超代码化中的派生"""
@@ -377,6 +385,16 @@ def jiaoyan_format_Bchao():
         order_ln2.click()
         sleep(1)
 
+def format(reportType):
+    if reportType == 'Img_131I':
+        buttons = driver.find_element_by_id('divNuclideImgExamination').find_elements_by_class_name('ico-Ax')
+    if reportType in ('Bchao_pre','Bchao_fellowup'):
+        buttons = driver.find_element_by_id('divUltrasonography').find_elements_by_class_name('ico-Ax')
+    if reportType =='B_FNA':
+        buttons = driver.find_element_by_id('divUltrasonography').find_element_by_xpath('//div[@code-key="code-chaoshengchuanci"]').find_elements_by_class_name('ico-Ax')
+    if buttons:
+        for b in buttons:
+            b.click()
 
 def is_element_visible(element):
     """判断是元素是否可见"""
@@ -396,12 +414,12 @@ def wait_loading():
 
 
 def readyuanshiReport(reportType):
+    dic= OrderedDict()
     checkResult=''
     checkConclusion=''
     if reportType in ['Bchao_pre','Bchao_fellowup']:
         checkResult = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
-        checkConclusion = driver.find_element_by_xpath(
-            '//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
     if reportType =='ImgB':
         checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
         checkConclusion = driver.find_element_by_xpath(
@@ -418,11 +436,12 @@ def readyuanshiReport(reportType):
         checkResult = driver.find_element_by_xpath('//div[@id="divImagingExamination"]/div[1]/div[5]/div[2]').text
         checkConclusion = driver.find_element_by_xpath(
             '//div[@id="divImagingExamination"]/div[1]/div[6]/div[2]').text
-
-    return {
-        "checkResult":checkResult,
-        "checkConclusion":checkConclusion,
-    }
+    if reportType =='B_FNA':
+        checkResult= driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[5]/div[2]').text
+        checkConclusion = driver.find_element_by_xpath('//div[@id="divUltrasonography"]/div[1]/div[6]/div[2]').text
+    dic['checkResult'] = checkResult
+    dic['checkConclusion'] = checkConclusion
+    return dic
 
 
 def readjiaoyanReport(reportType):
